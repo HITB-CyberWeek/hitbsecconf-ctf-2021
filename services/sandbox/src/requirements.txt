@@ -1,0 +1,8 @@
+fastapi==0.66.0
+passlib==1.7.4
+databases==0.4.3
+databases[postgresql]==0.4.3
+databases[sqlite]==0.4.3
+uvicorn==0.14.0
+python-jose==3.3.0
+python-jose[cryptography]==3.3.0
