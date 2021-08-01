@@ -48,7 +48,7 @@ async def create_user(username: str, password: str) -> database.User:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     if expires_delta is None:
-        expires_delta = timedelta(minutes=15)
+        expires_delta = timedelta(minutes=500)
 
     to_encode = {**data, "exp": datetime.utcnow() + expires_delta}
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)

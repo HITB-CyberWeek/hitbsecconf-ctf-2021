@@ -16,6 +16,10 @@ class CreateProgramRequest(BaseModel):
     code: str
 
 
+class RunProgramRequest(BaseModel):
+    input: str
+
+
 class User(BaseModel):
     id: int
     username: str
@@ -30,6 +34,10 @@ class Program(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class IndexResponse(SuccessResponse):
+    welcome: str
 
 
 class UserResponse(SuccessResponse):
@@ -47,3 +55,8 @@ class ProgramListResponse(SuccessResponse):
 
 class ProgramResponse(SuccessResponse):
     program: Program
+
+
+class RunProgramResponse(SuccessResponse):
+    log: str
+    output: str
