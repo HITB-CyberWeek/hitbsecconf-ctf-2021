@@ -1,0 +1,8 @@
+auto lo
+iface lo inet loopback
+
+allow-hotplug enp0s3
+iface enp0s3 inet static
+    address 192.168.56.2
+    netmask 255.255.255.0
+    gateway 192.168.56.1

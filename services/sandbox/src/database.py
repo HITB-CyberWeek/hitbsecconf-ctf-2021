@@ -10,7 +10,7 @@ import settings
 
 db = databases.Database(settings.DATABASE_URL)
 
-engine = sqlalchemy.create_engine(settings.DATABASE_URL, connect_args={"check_same_thread": False})
+engine = sqlalchemy.create_engine(settings.DATABASE_URL, connect_args=settings.DATABASE_CONNECTION_OPTIONS)
 Base = declarative_base()
 
 

@@ -64,6 +64,5 @@ async def run_sandbox_docker_container(working_directory: str) -> str:
 
 
 async def upload_sandbox_docker_image():
-    image_path = settings.BASE_DIR.parent / "sandbox_docker_image/sandbox.tar.gz"
     async with create_docker_connection() as docker:
-        await docker.images.import_image(image_path.read_bytes())
+        await docker.images.import_image(settings.DOCKER_SANDBOX_IMAGE_PATH.read_bytes())

@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Type, Any
 
 from pydantic import BaseModel, constr
 
@@ -13,11 +13,11 @@ class CreateUserRequest(BaseModel):
 
 
 class CreateProgramRequest(BaseModel):
-    code: str
+    code: constr(max_length=10000)
 
 
 class RunProgramRequest(BaseModel):
-    input: str
+    input: constr(max_length=10000)
 
 
 class User(BaseModel):
@@ -30,10 +30,11 @@ class User(BaseModel):
 
 class Program(BaseModel):
     id: int
-    code: str
+    code_prefix: constr(max_length=50)
 
-    class Config:
-        orm_mode = True
+    @classmethod
+    def from_orm(cls: Type["Program"], orm_program: Any) -> "Program":
+        return cls(id=orm_program.id, code_prefix=orm_program.code[:50])
 
 
 class IndexResponse(SuccessResponse):

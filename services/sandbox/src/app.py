@@ -155,7 +155,12 @@ async def run_program(program_id: int, request: models.RunProgramRequest, user: 
         )
 
     working_directory = f"/tmp/{uuid.uuid4()}"
-    async with asyncssh.connect(settings.DOCKER_HOST) as ssh_connection:
+    async with asyncssh.connect(
+            settings.DOCKER_HOST,
+            username=settings.SSH_USERNAME,
+            client_keys=[settings.SSH_KEY_PATH.as_posix()],
+            known_hosts=None
+    ) as ssh_connection:
         await ssh_connection.run(f"mkdir {working_directory}")
         sftp_connection = await ssh_connection.start_sftp_client()
 
@@ -165,6 +170,7 @@ async def run_program(program_id: int, request: models.RunProgramRequest, user: 
         log = await sandbox.run_sandbox_docker_container(working_directory)
 
         output = await download_file_from_server(sftp_connection, f"{working_directory}/output")
+        ssh_connection.run(f"rm -rf {working_directory}")
 
     return models.RunProgramResponse(
         log=log,
@@ -186,4 +192,4 @@ async def download_file_from_server(sftp_connection: asyncssh.SFTPClient, remote
 
 
 if __name__ == '__main__':
-    uvicorn.run("app:app", reload=True)
+    uvicorn.run("app:app", host=settings.HOST, port=settings.PORT, reload=True)
