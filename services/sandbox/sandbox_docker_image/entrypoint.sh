@@ -2,7 +2,7 @@
 
 set -e
 
-cd /work
+gcc -o /work/program /work/program.c
+rm -r /usr/bin/gcc /bin/busybox
 
-gcc -o program program.c
-./program < input > output
+/work/program < /work/input > /work/output
