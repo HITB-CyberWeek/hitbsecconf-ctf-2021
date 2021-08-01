@@ -170,7 +170,7 @@ async def run_program(program_id: int, request: models.RunProgramRequest, user: 
         log = await sandbox.run_sandbox_docker_container(working_directory)
 
         output = await download_file_from_server(sftp_connection, f"{working_directory}/output")
-        ssh_connection.run(f"rm -rf {working_directory}")
+        await ssh_connection.run(f"rm -rf {working_directory}")
 
     return models.RunProgramResponse(
         log=log,
