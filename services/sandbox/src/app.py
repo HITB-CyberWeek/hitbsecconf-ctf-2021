@@ -148,7 +148,7 @@ async def run_program(program_id: int, request: models.RunProgramRequest, user: 
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Program {program_id} not found",
         )
-    if program.id != user.id:
+    if program.user_id != user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to run other's programs",
