@@ -1,0 +1,16 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: unless-stopped
+
+  haraka:
+    image: haraka
+    build: haraka/
+    container_name: haraka
+    restart: unless-stopped
+    ports:
+      - "2525:25"
+    links:
+      - mongodb
