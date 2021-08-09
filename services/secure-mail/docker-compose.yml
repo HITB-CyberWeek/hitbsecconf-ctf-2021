@@ -5,6 +5,14 @@ services:
     container_name: mongodb
     restart: unless-stopped
 
+  clamd:
+    image: clamav/clamav:unstable
+    container_name: clamd
+    restart: unless-stopped
+    environment:
+      - "CLAMAV_NO_FRESHCLAMD=true"
+      - "CLAMAV_NO_MILTERD=true"
+
   haraka:
     image: haraka
     build: haraka/
@@ -14,3 +22,4 @@ services:
       - "2525:25"
     links:
       - mongodb
+      - clamd
