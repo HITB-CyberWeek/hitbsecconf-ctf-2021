@@ -4,7 +4,7 @@ RUN npm install -g Haraka
 RUN haraka -i /usr/local/haraka
 
 RUN adduser --home /usr/local/haraka --shell /usr/sbin/nologin --no-create-home --disabled-password --disabled-login smtp
-RUN cd /usr/local/haraka && npm install haraka-plugin-mongodb && npm install node-libcurl --build-from-source
+RUN cd /usr/local/haraka && npm install haraka-plugin-mongodb clamscan && npm install node-libcurl --build-from-source
 
 ADD ./config/smtp.ini /usr/local/haraka/config/smtp.ini
 ADD ./config/plugins /usr/local/haraka/config/plugins
