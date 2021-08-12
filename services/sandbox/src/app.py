@@ -1,14 +1,8 @@
-import asyncio
 import pathlib
-import ssl
-import logging
-import uuid
 import tempfile
-from typing import Any
+import uuid
 
 import asyncssh
-import aiodocker
-import aiohttp
 import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -131,6 +125,7 @@ async def create_program(request: models.CreateProgramRequest, user: database.Us
 
 @app.post(
     "/programs/{program_id}/run",
+    response_model=models.RunProgramResponse,
     tags=["programs"],
     responses={
         status.HTTP_404_NOT_FOUND: {
@@ -141,7 +136,7 @@ async def create_program(request: models.CreateProgramRequest, user: database.Us
         },
     }
 )
-async def run_program(program_id: int, request: models.RunProgramRequest, user: database.User = Depends(get_current_user)):
+async def run_program(program_id: int, request: models.RunProgramRequest, user: database.User = Depends(get_current_user)) -> models.RunProgramResponse:
     program = await programs.find_program_by_id(program_id)
     if program is None:
         raise HTTPException(
@@ -187,7 +182,10 @@ async def upload_file_to_server(sftp_connection: asyncssh.SFTPClient, data: str,
 
 async def download_file_from_server(sftp_connection: asyncssh.SFTPClient, remote_path: str) -> str:
     with tempfile.NamedTemporaryFile(prefix="download-") as download_file:
-        await sftp_connection.get(remote_path, download_file.name)
+        try:
+            await sftp_connection.get(remote_path, download_file.name)
+        except asyncssh.sftp.SFTPNoSuchFile:
+            return ""
         return pathlib.Path(download_file.name).read_text()
 
 
