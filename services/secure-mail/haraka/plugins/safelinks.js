@@ -2,12 +2,16 @@
 
 const { Curl } = require('node-libcurl');
 const NodeClam = require('clamscan');
+const Readable = require('stream').Readable;
+
+// TODO move to plugin init
 const ClamScan = new NodeClam().init({
     debug_mode: true,
     clamscan: {
         active: false
     },
     clamdscan: {
+        // TODO load from config
         host: 'clamav',
         port: 3310,
         local_fallback: false,
@@ -24,10 +28,23 @@ exports.check_links = function(next, connection) {
 
         plugin.loginfo("Started check_links");
 
+        const rs = Readable();
+        rs.push('foooooo');
+        rs.push('barrrrr');
+        rs.push(null);
+
         ClamScan.then(clamscan => {
             clamscan.get_version((err, version) => {
                 if (err) return plugin.logerror(err);
                 plugin.loginfo(`ClamAV Version: ${version}`);
+            });
+
+            clamscan.scan_stream(rs, (err, result) => {
+                if (err) return plugin.logerror(err);
+                const {is_infected} = result;
+
+                if (is_infected) return plugin.loginfo("Stream is infected! Booo!");
+                plugin.loginfo("Stream is not infected! Yay!");
             });
         });
 
