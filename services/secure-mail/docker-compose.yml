@@ -10,8 +10,6 @@ services:
     build: clamav/
     container_name: clamav
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 3310"]
 
   haraka:
     image: haraka
@@ -23,6 +21,3 @@ services:
     links:
       - mongodb
       - clamav
-    depends_on:
-      clamav:
-        condition: service_healthy
