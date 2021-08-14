@@ -9,15 +9,12 @@ RUN cd /usr/local/haraka && npm install haraka-plugin-mongodb clamscan && npm in
 ADD ./config/smtp.ini /usr/local/haraka/config/smtp.ini
 ADD ./config/plugins /usr/local/haraka/config/plugins
 ADD ./config/host_list /usr/local/haraka/config/host_list
-ADD ./config/me /usr/local/haraka/config/me
 
 ADD ./config/mongodb.ini /usr/local/haraka/config/mongodb.ini
 
 ADD ./plugins/safelinks.js /usr/local/haraka/plugins/safelinks.js
 ADD ./config/safelinks.ini /usr/local/haraka/config/safelinks.ini
 ADD ./docs/plugins/safelinks.md /usr/local/haraka/docs/plugins/safelinks.md
-
-ADD ./config/loglevel /usr/local/haraka/config/loglevel
 
 EXPOSE 25
 
