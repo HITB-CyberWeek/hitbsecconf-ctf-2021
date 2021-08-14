@@ -8,6 +8,7 @@ exports.register = function () {
     const plugin = this;
 
     plugin.load_config();
+    plugin.init_clamscan();
     plugin.register_hook('data', 'check_links');
 };
 
@@ -29,42 +30,66 @@ exports.load_config = function () {
     }
 };
 
+exports.init_clamscan = function () {
+    const plugin = this;
+
+    plugin.ClamScan = new NodeClam().init({
+        // TODO: disable
+        debug_mode: true,
+        clamscan: {
+            active: false
+        },
+        clamdscan: {
+            host: plugin.cfg.main.clamd_host,
+            port: plugin.cfg.main.clamd_port,
+            local_fallback: false,
+            path: null
+        }
+    });
+};
+
+exports.check_link = function(uri) {
+    var plugin = this;
+
+    const rs = Readable();
+    rs.push('foooooo');
+    rs.push('barrrrr');
+    rs.push(null);
+
+    return new Promise((resolve, reject) => {
+        plugin.ClamScan.then(clamscan => {
+            clamscan.scan_stream(rs, (err, result) => {
+                if (err) {
+                    plugin.logerror(err);
+                    return reject(err);
+                }
+
+                const {is_infected} = result;
+
+                return (is_infected ? reject(new Error('infected')) : resolve());
+            });
+        }).catch(err => {
+            plugin.logerror(err);
+            return reject(err);
+        });
+    });
+};
+
 exports.check_links = function(next, connection) {
         var plugin = this;
 
         plugin.loginfo("Started check_links");
 
-        const ClamScan = new NodeClam().init({
-            debug_mode: true,
-            clamscan: {
-                active: false
-            },
-            clamdscan: {
-                host: plugin.cfg.main.clamd_host,
-                port: plugin.cfg.main.clamd_port,
-                local_fallback: false,
-                path: null
-            }
-        });
+        const links = ['http://example.com/'];
 
-        const rs = Readable();
-        rs.push('foooooo');
-        rs.push('barrrrr');
-        rs.push(null);
+        var actions = links.map(l => plugin.check_link(l));
 
-        ClamScan.then(clamscan => {
-            clamscan.get_version((err, version) => {
-                if (err) return plugin.logerror(err);
-                plugin.loginfo(`ClamAV Version: ${version}`);
-            });
-
-            clamscan.scan_stream(rs, (err, result) => {
-                if (err) return plugin.logerror(err);
-                const {is_infected} = result;
-
-                if (is_infected) return plugin.loginfo("Stream is infected! Booo!");
-                plugin.loginfo("Stream is not infected! Yay!");
-            });
+        Promise.all(actions).then(() => {
+            plugin.loginfo('ALL DONE');
+            // TODO call next
+        }).catch(err => {
+            plugin.logerror(err);
+            // TODO reject
         });
 
 /*
