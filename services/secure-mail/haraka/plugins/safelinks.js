@@ -4,29 +4,48 @@ const { Curl } = require('node-libcurl');
 const NodeClam = require('clamscan');
 const Readable = require('stream').Readable;
 
-// TODO move to plugin init
-const ClamScan = new NodeClam().init({
-    debug_mode: true,
-    clamscan: {
-        active: false
-    },
-    clamdscan: {
-        // TODO load from config
-        host: 'clamav',
-        port: 3310,
-        local_fallback: false,
-        path: null
-    }
-});
-
 exports.register = function () {
-    this.register_hook('data', 'check_links');
+    const plugin = this;
+
+    plugin.load_config();
+    plugin.register_hook('data', 'check_links');
+};
+
+exports.load_config = function () {
+    const plugin = this;
+
+    plugin.cfg = plugin.config.get('safelinks.ini', () => {
+        plugin.load_config();
+    });
+
+    const defaults = {
+        clamd_port: 3310
+    };
+
+    for (const key in defaults) {
+        if (plugin.cfg.main[key] === undefined) {
+            plugin.cfg.main[key] = defaults[key];
+        }
+    }
 };
 
 exports.check_links = function(next, connection) {
         var plugin = this;
 
         plugin.loginfo("Started check_links");
+
+        const ClamScan = new NodeClam().init({
+            debug_mode: true,
+            clamscan: {
+                active: false
+            },
+            clamdscan: {
+                host: plugin.cfg.main.clamd_host,
+                port: plugin.cfg.main.clamd_port,
+                local_fallback: false,
+                path: null
+            }
+        });
 
         const rs = Readable();
         rs.push('foooooo');
