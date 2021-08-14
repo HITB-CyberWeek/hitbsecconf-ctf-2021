@@ -34,8 +34,6 @@ exports.init_clamscan = function () {
     const plugin = this;
 
     plugin.ClamScan = new NodeClam().init({
-        // TODO: disable
-        debug_mode: true,
         clamscan: {
             active: false
         },
@@ -49,30 +47,47 @@ exports.init_clamscan = function () {
 };
 
 exports.check_link = function(uri) {
-    var plugin = this;
-
-    const rs = Readable();
-    rs.push('foooooo');
-    rs.push('barrrrr');
-    rs.push(null);
+    const plugin = this;
 
     return new Promise((resolve, reject) => {
-        plugin.ClamScan.then(clamscan => {
-            clamscan.scan_stream(rs, (err, result) => {
-                if (err) {
-                    plugin.logerror(err);
-                    return reject(err);
-                }
+        const curl = new Curl();
+        curl.setOpt('URL', uri);
+        curl.setOpt('FOLLOWLOCATION', true);
 
-                const {is_infected} = result;
+        curl.on('end', function (statusCode, data, headers) {
+            plugin.loginfo(statusCode);
+            plugin.loginfo(this.getInfo('TOTAL_TIME'));
 
-                return (is_infected ? reject(new Error('infected')) : resolve());
+            const rs = Readable();
+            rs.push(data);
+            rs.push(null);
+
+            plugin.ClamScan.then(clamscan => {
+                clamscan.scan_stream(rs, (err, result) => {
+                    if (err) {
+                        plugin.logerror(err);
+                        return reject(err);
+                    }
+
+                    const {is_infected} = result;
+
+                    return (is_infected ? reject(new Error('infected')) : resolve());
+                });
+            }).catch(err => {
+                plugin.logerror(err);
+                return reject(err);
             });
-        }).catch(err => {
-            plugin.logerror(err);
-            return reject(err);
+
+            this.close();
         });
-    });
+
+        curl.on('error', function (error, errorCode) {
+            plugin.logerror(error.toString());
+            curl.close.bind(curl);
+        });
+
+        curl.perform();
+   });
 };
 
 exports.check_links = function(next, connection) {
