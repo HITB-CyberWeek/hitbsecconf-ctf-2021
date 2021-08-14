@@ -4,10 +4,14 @@ const { Curl } = require('node-libcurl');
 const NodeClam = require('clamscan');
 const ClamScan = new NodeClam().init({
     debug_mode: true,
+    clamscan: {
+        active: false
+    },
     clamdscan: {
-        host: 'clamd',
+        host: 'clamav',
         port: 3310,
-        local_fallback: false
+        local_fallback: false,
+        path: null
     }
 });
 

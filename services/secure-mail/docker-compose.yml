@@ -1,17 +1,17 @@
-version: '3'
+version: '3.4'
 services:
   mongodb:
     image: mongo
     container_name: mongodb
     restart: unless-stopped
 
-  clamd:
-    image: clamav/clamav:unstable
-    container_name: clamd
+  clamav:
+    image: clamav
+    build: clamav/
+    container_name: clamav
     restart: unless-stopped
-    environment:
-      - "CLAMAV_NO_FRESHCLAMD=true"
-      - "CLAMAV_NO_MILTERD=true"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3310"]
 
   haraka:
     image: haraka
@@ -22,4 +22,7 @@ services:
       - "2525:25"
     links:
       - mongodb
-      - clamd
+      - clamav
+    depends_on:
+      clamav:
+        condition: service_healthy
