@@ -1,0 +1,2 @@
+# Requirements for the checker of the Secure Mail service (HITB SECCONF EDU CTF 2021)
+
