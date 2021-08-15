@@ -9,7 +9,6 @@ exports.register = function () {
 
     plugin.load_config();
     plugin.init_clamscan();
-    plugin.register_hook('data', 'check_links');
 };
 
 exports.load_config = function () {
@@ -90,18 +89,31 @@ exports.check_link = function(uri) {
    });
 };
 
-exports.check_links = function(next, connection) {
-        const plugin = this;
+exports.hook_data = function (next, connection) {
+    connection.transaction.parse_body = true;
+    next();
+};
 
-        const links = ['http://example.com/'];
+exports.hook_data_post = function (next, connection) {
+    const plugin = this;
 
-        Promise.all(links.map(l => plugin.check_link(l))).then(() => {
-            plugin.loginfo('ALL DONE');
-            // TODO call next
-        }).catch(err => {
-            plugin.logerror(err);
-            // TODO reject
-        });
+    const txn = connection.transaction;
 
-	next();
+    plugin.loginfo(`Data bytes: ${txn.data_bytes}`);
+    plugin.loginfo(`>>${txn.body.bodytext}<<`);
+
+    const links = ['http://example.com/'];
+
+    Promise.all(links.map(l => plugin.check_link(l))).then(() => {
+        plugin.loginfo('ALL DONE');
+        next();
+    }).catch(err => {
+        plugin.logerror(err);
+        // TODO parse error & call next(DENYSOFT) if internal error
+        next(DENY);
+    });
+};
+
+exports.hook_lookup_rdns = function (next, connection) {
+    next(OK);
 };
