@@ -2,7 +2,7 @@ from typing import Optional
 
 import databases
 import sqlalchemy
-from sqlalchemy import Column, String, Integer, Text, ForeignKey
+from sqlalchemy import Column, String, Integer, Text, ForeignKey, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -43,6 +43,22 @@ class Program(Base):
         if data is None:
             return None
         return Program(**data)
+
+
+class ProofOfWorkChallenge(Base):
+    __tablename__ = "challenges"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    program_id = Column(Integer, ForeignKey(Program.id), index=True)
+    prefix = Column(Integer)
+    is_used = Column(Boolean)
+    create_time = Column(DateTime)
+
+    @staticmethod
+    def from_database(data) -> Optional["ProofOfWorkChallenge"]:
+        if data is None:
+            return None
+        return ProofOfWorkChallenge(**data)
 
 
 Base.metadata.create_all(engine)

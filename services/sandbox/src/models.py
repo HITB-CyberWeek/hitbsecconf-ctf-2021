@@ -17,6 +17,8 @@ class CreateProgramRequest(BaseModel):
 
 
 class RunProgramRequest(BaseModel):
+    challenge_id: int
+    challenge_response: str
     input: constr(max_length=10000)
 
 
@@ -61,3 +63,9 @@ class ProgramResponse(SuccessResponse):
 class RunProgramResponse(SuccessResponse):
     log: str
     output: str
+
+
+class ProofOfWorkChallengeResponse(SuccessResponse):
+    challenge_id: int
+    prefix: str
+    task: str

@@ -1,4 +1,6 @@
+import hashlib
 import pathlib
+import string
 import tempfile
 import uuid
 
@@ -124,6 +126,52 @@ async def create_program(request: models.CreateProgramRequest, user: database.Us
 
 
 @app.post(
+    "/programs/{program_id}/challenge",
+    response_model=models.ProofOfWorkChallengeResponse,
+    tags=["programs"],
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Program not found",
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "You are not allowed to get challenges for other's programs",
+        },
+        status.HTTP_425_TOO_EARLY: {
+            "description": "Too fast. You can not request more than 5 challenges in a minute"
+        },
+    }
+)
+async def get_proof_of_work_challenge(program_id: int, user: database.User = Depends(get_current_user)) -> models.ProofOfWorkChallengeResponse:
+    program = await programs.find_program_by_id(program_id)
+    if program is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Program {program_id} not found",
+        )
+    if program.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to run other's programs",
+        )
+
+    if len(await programs.get_challenges_for_last_minute(program_id)) > 5:
+        raise HTTPException(
+            status_code=status.HTTP_425_TOO_EARLY,
+            detail="Too fast. You can not request more than 5 challenges in a minute"
+        )
+
+    prefix = programs.generate_proof_of_work_challenge()
+    challenge = await programs.create_proof_of_work_challenge(program_id, prefix)
+    return models.ProofOfWorkChallengeResponse(
+        challenge_id=challenge.id,
+        prefix=f"{prefix:08x}",
+        task="To run a program you should do some work. "
+             f"Please find some 8-digit hexadecimal suffix such that sha256_hexdigest('{prefix:08x}<0xsuffix>') "
+             "starts with '000000'."
+    )
+
+
+@app.post(
     "/programs/{program_id}/run",
     response_model=models.RunProgramResponse,
     tags=["programs"],
@@ -132,7 +180,7 @@ async def create_program(request: models.CreateProgramRequest, user: database.Us
             "description": "Program not found",
         },
         status.HTTP_403_FORBIDDEN: {
-            "description": "You are not allowed to run other's programs",
+            "description": "You are not allowed to run other's programs or invalid response for proof-of-work challenge",
         },
     }
 )
@@ -147,6 +195,28 @@ async def run_program(program_id: int, request: models.RunProgramRequest, user: 
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to run other's programs",
+        )
+
+    challenge = await programs.find_challenge_by_id(request.challenge_id)
+    if challenge is None or challenge.program_id != program_id or challenge.is_used:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid challenge id"
+        )
+
+    if len(request.challenge_response) != 8 or not all(c in string.hexdigits for c in request.challenge_response):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid challenge response, should be 8-digit hexadecimal string"
+        )
+
+    if not programs.check_challenge_response(challenge, request.challenge_response):
+        h = hashlib.sha256(f"{challenge.prefix:08x}{request.challenge_response}".encode()).hexdigest()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Invalid challenge response: "
+                   f"sha256_hexdigest('{challenge.prefix:08x}{request.challenge_response}') = {h}. "
+                   f"Should start with '000000', not with '{h[:6]}'."
         )
 
     working_directory = f"/tmp/{uuid.uuid4()}"
