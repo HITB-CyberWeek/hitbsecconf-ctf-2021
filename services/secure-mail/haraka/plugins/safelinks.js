@@ -3,6 +3,8 @@
 const { Curl } = require('node-libcurl');
 const NodeClam = require('clamscan');
 const Readable = require('stream').Readable;
+const libmime = require('libmime');
+const cheerio = require('cheerio');
 
 exports.register = function () {
     const plugin = this;
@@ -45,7 +47,17 @@ exports.init_clamscan = function () {
     });
 };
 
-exports.check_link = function(uri) {
+exports.extract_links_from_html = function (html) {
+    const $ = cheerio.load(html);
+
+    var result = new Array();
+    $('a').each(function(i, link) {
+        result.push($(link).attr('href'));
+    });
+    return result;
+};
+
+exports.check_link = function (uri) {
     const plugin = this;
 
     return new Promise((resolve, reject) => {
@@ -94,15 +106,37 @@ exports.hook_data = function (next, connection) {
     next();
 };
 
+exports.extract_links_from_body = function (body) {
+    const plugin = this;
+
+    var result = new Array();
+    const content_type = libmime.parseHeaderValue(body.header.get_decoded('content-type')).value;
+
+    switch (content_type) {
+        case 'text/html':
+            const extracted_from_html = plugin.extract_links_from_html(body.bodytext);
+            result.push(...extracted_from_html);
+            break;
+        case 'multipart/alternative':
+        case 'multipart/mixed':
+            if (body.children) {
+                for (var i = 0; i < body.children.length; i++) {
+                    const extracted_from_body = plugin.extract_links_from_body(body.children[i]);
+                    result.push(...extracted_from_body);
+                }
+            }
+            break;
+    }
+
+    return result;
+};
+
 exports.hook_data_post = function (next, connection) {
     const plugin = this;
 
     const txn = connection.transaction;
 
-    plugin.loginfo(`Data bytes: ${txn.data_bytes}`);
-    plugin.loginfo(`>>${txn.body.bodytext}<<`);
-
-    const links = ['http://example.com/'];
+    var links = plugin.extract_links_from_body(txn.body);
 
     Promise.all(links.map(l => plugin.check_link(l))).then(() => {
         plugin.loginfo('ALL DONE');
