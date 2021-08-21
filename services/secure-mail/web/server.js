@@ -42,14 +42,18 @@ const requestListener = function (request, response) {
 const server = http.createServer(requestListener);
 const wsServer = new WebSocket.Server({server: server});
 wsServer.on('connection', function connection(ws) {
-    console.log(`Connection`);
-
     ws.on('message', message => {
         console.log(`received: >>${message}<<`);
 
         switch (message.toString()) {
             case 'help':
                 ws.send('HELP');
+                break;
+            case 'adduser':
+                ws.send('adduser');
+                break;
+            case 'login':
+                ws.send('login');
                 break;
             default:
                 ws.send(`${message}: command not found`);
