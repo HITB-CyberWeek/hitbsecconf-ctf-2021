@@ -5,7 +5,7 @@ term.prompt = () => {
     term.write('\r\n$ ');
 };
 
-const ws = new WebSocket('ws://localhost:8080/');
+const ws = new WebSocket('ws://' + location.host + '/');
 
 ws.onopen = () => {
     term.writeln('Welcome to xterm.js');
