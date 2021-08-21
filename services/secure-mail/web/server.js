@@ -1,7 +1,14 @@
+const process = require('process');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
+
+const port = 8080;
+
+process.on('SIGINT', () => {
+  process.exit(0);
+});
 
 const requestListener = function (request, response) {
     const routes = {
@@ -37,10 +44,20 @@ const wsServer = new WebSocket.Server({server: server});
 wsServer.on('connection', function connection(ws) {
     console.log(`Connection`);
 
-    ws.on('message', function incoming(message) {
-        console.log(`received: ${message}`);
-        ws.send("OUTPUT");
+    ws.on('message', message => {
+        console.log(`received: >>${message}<<`);
+
+        switch (message.toString()) {
+            case 'help':
+                ws.send('HELP');
+                break;
+            default:
+                ws.send(`${message}: command not found`);
+                break;
+        }
     });
 });
 
-server.listen(8080);
+server.listen(port, () => {
+  console.log(`Server started`);
+});

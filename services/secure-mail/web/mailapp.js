@@ -8,7 +8,7 @@ term.prompt = () => {
 const ws = new WebSocket('ws://' + location.host + '/');
 
 ws.onopen = () => {
-    term.writeln('Welcome to xterm.js');
+    term.writeln('Welcome to SecureMail');
     term.prompt();
 };
 
