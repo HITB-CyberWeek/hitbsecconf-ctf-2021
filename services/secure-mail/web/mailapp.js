@@ -77,15 +77,21 @@ term.onData(e => {
             term.prompt();
             break;
         case '\u007F':
-            if (term._core.buffer.x > 2) {
-                if (needUsername) {
+            if (needUsername) {
+                if (term._core.buffer.x > 6) {
                     username = username.slice(0, -1);
-                } else if (needPassword) {
-                    password = password.slice(0, -1);
-                } else {
-                    cmd = cmd.slice(0, -1);
+                    term.write('\b \b');
                 }
-                term.write('\b \b');
+            } else if (needPassword) {
+                if (term._core.buffer.x > 10) {
+                    password = password.slice(0, -1);
+                    term.write('\b \b');
+                }
+            } else {
+                if (term._core.buffer.x > 2) {
+                    cmd = cmd.slice(0, -1);
+                    term.write('\b \b');
+                }
             }
             break;
         case '\f':

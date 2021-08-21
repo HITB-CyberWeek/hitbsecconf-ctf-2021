@@ -47,7 +47,8 @@ wsServer.on('connection', function connection(ws) {
 
         var response = {exit_code : 0, output : ''};
 
-        switch (command.toString()) {
+        const argv = command.toString().split(' ');
+        switch (argv[0]) {
             case 'help':
                 response.output = 'HELP';
                 break;
