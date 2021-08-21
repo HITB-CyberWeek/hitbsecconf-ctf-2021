@@ -30,7 +30,7 @@ namespace svghost.controllers
 			if(text == null)
 				return StatusCode(404, "👻 not found");
 
-			Response.ContentType = "text/svg+xml";
+			Response.ContentType = "text/plain";
 			return Content(text);
 		}
 

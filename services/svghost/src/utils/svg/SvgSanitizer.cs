@@ -12,7 +12,6 @@ namespace svghost.utils.svg
 		public static string Sanitize(string data)
 		{
 			var doc = new XmlDocument {XmlResolver = null!};
-			//VULN: UTF-8 encoding used here to decode, XML encoding from header is ignored!
 			doc.Load(XmlReader.Create(new StringReader(data), XmlSettings));
 			SanitizeNodes(doc, 0);
 			return doc.InnerXml;

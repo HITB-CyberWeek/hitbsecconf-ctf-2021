@@ -15,7 +15,7 @@ namespace svghost
 				.ConfigureLogging(builder => builder.AddConsole())
 				.UseKestrel(options =>
 				{
-					options.Listen(IPAddress.Loopback, 5073);
+					options.Listen(IPAddress.Any, 5073);
 					options.AddServerHeader = false;
 					options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(30.0);
 					options.Limits.MaxRequestBodySize = 65536L;
