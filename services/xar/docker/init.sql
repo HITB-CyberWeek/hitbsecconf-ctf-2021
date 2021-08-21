@@ -3,7 +3,7 @@ create extension pg_cron;
 create table projects (
     id     uuid primary key default gen_random_uuid(),
     ts     timestamptz default now(),
-    name   varchar(64) not null unique,
+    name   varchar(128) not null unique,
     active boolean default true
 );
 
@@ -35,6 +35,9 @@ begin
   loop
     begin
         execute format('create table data_%s partition of archived_data for values in (%L);', p.name, p.project_id);
+    exception when others then
+    end;
+    begin
         update projects set active = false where id = p.project_id;
         with d as (
             delete from data
