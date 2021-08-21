@@ -18,12 +18,15 @@ var password = '';
 var needUsername = false;
 var needPassword = false;
 
-// TODO: message: {exit_code: ..., output: ...}
-
 ws.onmessage = message => {
-  term.write(`\r\n${message.data}`);
-  term.prompt();
-  cmd = '';
+    var response = JSON.parse(message.data);
+    if (response.exit_code !== 0) {
+        term.write(`\r\n\x1b[1;31m${response.output}\x1b[0m`);
+    } else {
+        term.write(`\r\n${response.output}`);
+    }
+    term.prompt();
+    cmd = '';
 };
 
 const startEnterUsername = () => {
