@@ -18,7 +18,7 @@ namespace svghost
 					options.Listen(IPAddress.Any, 5073);
 					options.AddServerHeader = false;
 					options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(30.0);
-					options.Limits.MaxRequestBodySize = 65536L;
+					options.Limits.MaxRequestBodySize = 512L * 1024L;
 					options.Limits.MaxRequestLineSize = 4096;
 					options.Limits.MaxRequestHeaderCount = 64;
 					options.Limits.MaxRequestHeadersTotalSize = 8192;
