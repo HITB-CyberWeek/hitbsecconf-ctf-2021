@@ -1,6 +1,10 @@
 const term = new Terminal();
-term.setOption('cursorBlink', true);
+const fitAddon = new FitAddon.FitAddon();
+term.loadAddon(fitAddon);
 term.open(document.getElementById('terminal'));
+fitAddon.fit();
+
+term.setOption('cursorBlink', true);
 
 var currentUser = '';
 
@@ -17,6 +21,7 @@ var connected = false;
 
 ws.onopen = () => {
     connected = true;
+    ws.send(term.cols);
     term.writeln('Welcome to SecureMail');
     term.prompt();
 };
