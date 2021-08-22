@@ -1,15 +1,29 @@
 const term = new Terminal();
 term.setOption('cursorBlink', true);
 term.open(document.getElementById('terminal'));
+
+var currentUser = '';
+
 term.prompt = () => {
-    term.write('\r\n$ ');
+    if (currentUser) {
+        term.write(`\r\n(\x1b[1;32m${currentUser}\x1b[0m)$ `);
+    } else {
+        term.write('\r\n$ ');
+    }
 };
 
 const ws = new WebSocket('ws://' + location.host + '/');
+var connected = false;
 
 ws.onopen = () => {
+    connected = true;
     term.writeln('Welcome to SecureMail');
     term.prompt();
+};
+
+
+ws.onclose = e => {
+    connected = false;
 };
 
 var cmd = '';
@@ -20,11 +34,19 @@ var needPassword = false;
 
 ws.onmessage = message => {
     var response = JSON.parse(message.data);
-    if (response.exit_code !== 0) {
-        term.write(`\r\n\x1b[1;31m${response.output}\x1b[0m`);
-    } else {
-        term.write(`\r\n${response.output}`);
+    if (response.output) {
+        if (response.exit_code !== 0) {
+            term.write(`\r\n\x1b[1;31m${response.output}\x1b[0m`);
+        } else {
+            term.write(`\r\n${response.output}`);
+        }
     }
+    if (cmd.startsWith('login') && !response.exit_code) {
+        currentUser = cmd.split(' ')[1];
+    } else if (cmd == 'logout' && !response.exit_code) {
+        currentUser = '';
+    }
+
     term.prompt();
     cmd = '';
 };
@@ -48,9 +70,15 @@ const cleanupPassword = () => {
 };
 
 term.onData(e => {
+    if (!connected) {
+        return;
+    }
+
     switch (e) {
         case '\r':
-            if (needUsername) {
+            if (!cmd) {
+                term.prompt();
+            } else if (needUsername) {
                 cmd += ' ' + username;
                 cleanupUsername();
                 startEnterPassword();
@@ -59,7 +87,7 @@ term.onData(e => {
                 cleanupPassword();
                 ws.send(cmd);
             } else {
-                if ((cmd.startsWith('login') || cmd.startsWith('adduser')) && cmd.split(' ').length != 3) {
+                if ((cmd.startsWith('login') || cmd.startsWith('adduser')) && cmd.split(' ').length < 3) {
                     if (cmd.split(' ').length == 1) {
                         startEnterUsername();
                     } else {
@@ -88,7 +116,11 @@ term.onData(e => {
                     term.write('\b \b');
                 }
             } else {
-                if (term._core.buffer.x > 2) {
+                var max = 2;
+                if (currentUser) {
+                    max += currentUser.length + 2;
+                }
+                if (term._core.buffer.x > max) {
                     cmd = cmd.slice(0, -1);
                     term.write('\b \b');
                 }
@@ -97,7 +129,6 @@ term.onData(e => {
         case '\f':
             if (!needUsername && !needPassword) {
                 term.clear();
-                cmd = '';
             }
             break;
         default:
