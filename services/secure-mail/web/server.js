@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
+const { convert } = require('html-to-text');
 
 const port = 8080;
 
@@ -16,6 +17,8 @@ const requestListener = function (request, response) {
         '/xterm.css' : {filePath : 'node_modules/xterm/css/xterm.css', contentType : 'text/css'},
         '/xterm.js' : {filePath : 'node_modules/xterm/lib/xterm.js', contentType : 'text/javascript'},
         '/xterm.js.map' : {filePath : 'node_modules/xterm/lib/xterm.js.map', contentType : 'application/json'},
+        '/xterm-addon-fit.js' : {filePath : 'node_modules/xterm-addon-fit/lib/xterm-addon-fit.js', contentType : 'text/javascript'},
+        '/xterm-addon-fit.js.map' : {filePath : 'node_modules/xterm-addon-fit/lib/xterm-addon-fit.js.map', contentType : 'application/json'},
         '/mailapp.js' : {filePath : 'mailapp.js', contentType : 'text/javascript'}
     };
 
@@ -60,6 +63,11 @@ const wsServer = new WebSocket.Server({server: server});
 wsServer.on('connection', function connection(ws) {
     ws.on('message', command => {
         console.log(`received: >>${command}<<, ws.authUser=${ws.authUser}`);
+
+        if (!ws.termCols) {
+            ws.termCols = parseInt(command);
+            return;
+        }
 
         var response = {exit_code : 0, output : ''};
 
@@ -109,6 +117,27 @@ wsServer.on('connection', function connection(ws) {
                     response.exit_code = -1;
                 } else {
                     delete ws.authUser;
+                }
+                break;
+            case 'ls':
+                if (!ws.authUser) {
+                    response.output = `${argv[0]}: command not found`;
+                    response.exit_code = -1;
+                } else if (argv.length != 1) {
+                    response.output = `${argv[0]}: invalid command arguments`;
+                    response.exit_code = -1;
+                } else {
+                    const emails = ["Elon Musk <Elon.Musk@tesla.com>\tInteresting business proposal\t2021-08-21T18:35:51.348Z", 'bbb.eml'];
+                    response.output = emails.join('\r\n');
+                }
+                break;
+            case 'cat':
+                if (!ws.authUser) {
+                    response.output = `${argv[0]}: command not found`;
+                    response.exit_code = -1;
+                } else {
+                    const html = "<html>\n  <body>\n    <p>Dear Sir/Madam,<br>\n       I have an <a href=\"http://www.realpython.com\">interesting business proposal</a> I want to share with you.<br><br>\n       ---<br>\n       Elon Musk\n    </p>\n  </body>\n</html>";
+                    response.output = convert(html, {wordwrap: ws.termCols}).replace(/\n/g, "\r\n");
                 }
                 break;
             default:
