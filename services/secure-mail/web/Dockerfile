@@ -1,12 +1,12 @@
 FROM node:latest
 
 WORKDIR /var/www
+COPY ./package.json ./
+RUN npm install
+
 COPY ./index.html ./
 COPY ./mailapp.js ./
-COPY ./package.json ./
 COPY ./server.js ./
-
-RUN npm install
 
 USER www-data
 EXPOSE 8080
