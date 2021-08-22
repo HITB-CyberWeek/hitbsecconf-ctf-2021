@@ -39,27 +39,80 @@ const requestListener = function (request, response) {
     });
 }
 
+var users = {};
+const createUser = (username, password) => {
+    if (username in users) {
+        return false;
+    }
+    users[username] = password;
+    return true;
+};
+
+const authenticateUser = (username, password) => {
+    if (!(username in users)) {
+        return false;
+    }
+    return users[username] == password;
+};
+
 const server = http.createServer(requestListener);
 const wsServer = new WebSocket.Server({server: server});
 wsServer.on('connection', function connection(ws) {
     ws.on('message', command => {
-        console.log(`received: >>${command}<<`);
+        console.log(`received: >>${command}<<, ws.authUser=${ws.authUser}`);
 
         var response = {exit_code : 0, output : ''};
 
-        const argv = command.toString().split(' ');
+        const argv = command.toString().split(' ').filter(function(i){return i});
         switch (argv[0]) {
             case 'help':
                 response.output = 'HELP';
                 break;
             case 'adduser':
-                response.output = 'adduser';
+                if (ws.authUser) {
+                    response.output = `${argv[0]}: command not found`;
+                    response.exit_code = -1;
+                } else if (argv.length != 3) {
+                    response.output = `${argv[0]}: invalid command arguments`;
+                    response.exit_code = -1;
+                } else {
+                    if (createUser(argv[1], [argv[2]])) {
+                        response.output = `User ${argv[1]} created`;
+                    } else {
+                        response.output = `${argv[0]}: user ${argv[1]} already exists`
+                        response.exit_code = -1;
+                    }
+                }
                 break;
             case 'login':
-                response.output = 'login';
+                if (ws.authUser) {
+                    response.output = `${argv[0]}: command not found`;
+                    response.exit_code = -1;
+                } else if (argv.length != 3) {
+                    response.output = `${argv[0]}: invalid command arguments`;
+                    response.exit_code = -1;
+                } else {
+                    if (!authenticateUser(argv[1], argv[2])) {
+                        response.output = `${argv[0]}: authentication failed`
+                        response.exit_code = -1;
+                    } else {
+                        ws.authUser = argv[1];
+                    }
+                }
+                break;
+            case 'logout':
+                if (!ws.authUser) {
+                    response.output = `${argv[0]}: command not found`;
+                    response.exit_code = -1;
+                } else if (argv.length != 1) {
+                    response.output = `${argv[0]}: invalid command arguments`;
+                    response.exit_code = -1;
+                } else {
+                    delete ws.authUser;
+                }
                 break;
             default:
-                response.output = `${command}: command not found`;
+                response.output = `${argv[0]}: command not found`;
                 response.exit_code = -1;
                 break;
         }
