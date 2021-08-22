@@ -25,7 +25,7 @@ namespace checker.net
 			var stopwatch = new Stopwatch();
 			try
 			{
-				var client = CreateHttpClient(TimeSpan.FromMilliseconds(timeout), maxBodySize);
+				using var client = CreateHttpClient(TimeSpan.FromMilliseconds(timeout), maxBodySize);
 				var message = new HttpRequestMessage(method, relative) {Version = HttpVersion, Method = method, Content = data == null ? null : new ByteArrayContent(data)};
 
 				if(headers != null)
@@ -70,7 +70,7 @@ namespace checker.net
 				return HttpResult.Unknown;
 
 			var result = new HttpResult {StatusCode = response.StatusCode, StatusDescription = response.ReasonPhrase, Headers = response.Headers};
-			using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+			await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
 			var ms = new MemoryStream(new byte[maxBodySize], 0, maxBodySize, true, true);
 			ms.SetLength(0);
