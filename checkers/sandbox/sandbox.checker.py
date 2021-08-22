@@ -6,12 +6,14 @@ import pathlib
 import random
 import string
 import time
+from typing import Tuple
 
 import requests.auth
 
 import checklib
 import checklib.http
 import checklib.random
+from proof_of_work import challenge_responses
 
 
 class SandboxChecker(checklib.http.HttpJsonChecker):
@@ -47,11 +49,17 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
         program_id = data["program_id"]
 
         self._login(username, password)
+        challenge_id, challenge_prefix = self._get_proof_of_work_challenge(program_id)
+
+        if challenge_prefix not in challenge_responses:
+            self.exit(checklib.StatusCode.MUMBLE, "Unknown proof-of-work challenge, can't solve it")
+
+        challenge_response = challenge_responses[challenge_prefix]
 
         one_time_notepad_data = [random.randint(0, 255) for _ in range(len(flag))]
         one_time_notepad = " ".join(map(str, one_time_notepad_data))
         start_time = time.monotonic()
-        output = self._run_program(program_id, one_time_notepad)
+        output = self._run_program(program_id, one_time_notepad, challenge_id, challenge_response)
         logging.info("Program finished at %f seconds" % (time.monotonic() - start_time))
 
         output_data = list(map(int, output.split()))
@@ -114,16 +122,24 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
         logging.info("Success. Program id is %d" % (program_id, ))
         return program_id
 
-    def _run_program(self, program_id: int, stdin: str):
+    def _run_program(self, program_id: int, stdin: str, challenge_id: int, challenge_response: str):
         logging.info('Try to run a program %d with stdin %r' % (program_id, stdin))
         r = self.try_http_post("/programs/%d/run" % (program_id, ), json={
             "input": stdin,
+            "challenge_id": challenge_id,
+            "challenge_response": challenge_response,
         })
 
         self.mumble_if_false("log" in r, "Can't find 'log' key in response for POST /programs/?/runs")
         self.mumble_if_false("output" in r, "Can't find 'output' key in response for POST /programs/?/runs")
 
         return r["output"]
+
+    def _get_proof_of_work_challenge(self, program_id: int) -> Tuple[int, str]:
+        r = self.try_http_post("/programs/%d/challenge" % (program_id, ))
+        self.mumble_if_false("challenge_id" in r, "Can't find `challenge_id` key in response for POST /programs/?/challenge")
+        self.mumble_if_false("prefix" in r, "Can't find `prefix` key in response for POST /programs/?/challenge")
+        return r["challenge_id"], r["prefix"]
 
 
 class BearerAuth(requests.auth.AuthBase):

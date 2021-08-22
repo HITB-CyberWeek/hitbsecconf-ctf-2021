@@ -45,7 +45,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> database.User
 
 @app.on_event("startup")
 async def startup():
-    await sandbox.upload_sandbox_docker_image()
+    # await sandbox.upload_sandbox_docker_image()
     await database.db.connect()
 
 
@@ -166,7 +166,7 @@ async def get_proof_of_work_challenge(program_id: int, user: database.User = Dep
         challenge_id=challenge.id,
         prefix=f"{prefix:08x}",
         task="To run a program you should do some work. "
-             f"Please find some 8-digit hexadecimal suffix such that sha256_hexdigest('{prefix:08x}<0xsuffix>') "
+             f"Please find any 8-digit hexadecimal SUFFIX such that sha256_hexdigest('{prefix:08x}<SUFFIX>') "
              "starts with '000000'."
     )
 
