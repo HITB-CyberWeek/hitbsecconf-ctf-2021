@@ -1,0 +1,46 @@
+cs_user: cs
+cs_dir:  /home/cs/checksystem
+cs_scoreboard_dir: /home/cs/ctf-scoreboard-client
+
+pg_cs_user: cs
+pg_cs_pass: chietaeJoo3b
+pg_cs_db: cs
+pg_cs_host: 10.10.10.9
+pg_cs_port: 5432
+pg_max_connections: 512
+pg_shared_buffers: 2GB
+pg_work_mem: 16MB
+
+cs_limit_nofile: 10000
+
+cs_worker_default_jobs: 4
+cs_worker_checkers_jobs: 64
+cs_worker_checkers_queues: -q checker
+cs_worker_instance: 1
+
+cs_hypnotoad_listen: 127.0.0.1:8080
+cs_hypnotoad_flags_listen: 10.10.10.9:8080
+cs_hypnotoad_workers: 4
+cs_hypnotoad_accepts: 1024
+cs_hypnotoad_keep_alive_timeout: 100
+cs_nginx_upstream_keepalive: 8
+cs_nginx_workers: 4
+cs_nginx_listen: 0.0.0.0:80
+cs_static_path: /home/cs/ctf-scoreboard-client/scoreboard/build
+
+cs_base_url: https://ctf.hitb.org
+cs_admin_auth: root:bee4Ropeix3x
+cs_ctf_name: HITBSECCONF2021 CTF
+cs_flags_secret: geephie7Foob
+cs_round_length: 60
+cs_flag_life_time: 15
+cs_disable_irrelevant_services: 0
+cs_time: "['2021-08-22 12:00:00', '2021-08-28 12:00:00']"
+
+teams: |
+  {name => 'team1', network => '10.60.1.0/24', host => '10.60.1.3', token => '1_c7d900d8acb505de70d5fa2fb86c2ac2', country => 'India', logo => 'https://ctf.hitb.org/data/logos/1.jpg'},
+  {name => 'team2', network => '10.60.2.0/24', host => '10.60.2.3', token => '2_68fb7f8dcd276a1f798d947387054711', country => 'India', logo => 'https://ctf.hitb.org/data/logos/2.jpg'},
+services: |
+  {name => 'sandbox', path => 'checkers/sandbox/sandbox.checker.py', timeout => 30, tcp_port => 8000},
+  {name => 'svghost', path => 'checkers/svghost/checker.sh',         timeout => 30, tcp_port => 5073},
+  {name => 'xar',     path => 'checkers/xar/checker.py',             timeout => 30, tcp_port => 3000},
