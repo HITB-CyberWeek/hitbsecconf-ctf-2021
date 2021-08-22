@@ -7,10 +7,11 @@ fitAddon.fit();
 term.setOption('cursorBlink', true);
 
 var currentUser = '';
+var workingDir = '';
 
 term.prompt = () => {
     if (currentUser) {
-        term.write(`\r\n(\x1b[1;32m${currentUser}\x1b[0m)$ `);
+        term.write(`\r\n(\x1b[1;32m${currentUser}\x1b[0m:\x1b[1;34m${workingDir}\x1b[0m)$ `);
     } else {
         term.write('\r\n$ ');
     }
@@ -50,6 +51,10 @@ ws.onmessage = message => {
         currentUser = cmd.split(' ')[1];
     } else if (cmd == 'logout' && !response.exit_code) {
         currentUser = '';
+    }
+
+    if (response.working_dir) {
+        workingDir = response.working_dir;
     }
 
     term.prompt();
@@ -123,7 +128,7 @@ term.onData(e => {
             } else {
                 var max = 2;
                 if (currentUser) {
-                    max += currentUser.length + 2;
+                    max += currentUser.length + workingDir.length + 3; // 3 == '(' + ':' + ')'
                 }
                 if (term._core.buffer.x > max) {
                     cmd = cmd.slice(0, -1);
