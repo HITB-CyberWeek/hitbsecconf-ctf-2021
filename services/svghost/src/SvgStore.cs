@@ -26,7 +26,7 @@ namespace svghost
 			CleanupTimer = new Timer(_ =>
 			{
 				ReadSafeLinkedListNode<Svg> head;
-				var border = DateTime.UtcNow.AddMinutes(-30);
+				var border = DateTime.UtcNow.AddMinutes(-SvgTtlMinutes);
 				while((head = Svgs.Last) != null && head.Value.Date < border)
 					lock(Svgs) Svgs.RemoveLast();
 			}, null, 30000, 30000);
@@ -45,7 +45,7 @@ namespace svghost
 			var dir = Path.Combine(DataDirectory, RollingValue(utcNow).ToString(NumberFormatInfo.InvariantInfo));
 			Directory.CreateDirectory(dir);
 			var path = Path.Combine(dir, ToFilename(userId, fileId, isPrivate, sanitized));
-			var tmp = path + ".tmp";
+			var tmp = path + TmpFileExtension;
 			await File.WriteAllTextAsync(tmp, data);
 			File.Move(tmp, path, true);
 		}
@@ -56,7 +56,7 @@ namespace svghost
 		private static IEnumerable<Svg> ListFiles() => LastRollingFolders()
 			.SelectMany(rolling =>
 			{
-				try { return Directory.EnumerateFiles(Path.Combine(DataDirectory, rolling), "*-s.svg"); }
+				try { return Directory.EnumerateFiles(Path.Combine(DataDirectory, rolling), "*-true.svg"); }
 				catch(DirectoryNotFoundException) { return Array.Empty<string>(); }
 			})
 			.Select(file => (file, time: File.GetCreationTimeUtc(file)))
@@ -101,7 +101,11 @@ namespace svghost
 
 		private const string DataDirectory = "data";
 		private const string FileExtension = ".svg";
+		private const string TmpFileExtension = ".tmp";
+
+		private const int SvgTtlMinutes = 40;
 		private const int LastRollingFoldersToCheck = 3;
+
 		private static readonly ReadSafeLinkedListNode<Svg>.LinkedList Svgs = new();
 		private static readonly Timer CleanupTimer;
 	}

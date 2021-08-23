@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Logging;
 
 namespace svghost
 {
@@ -12,7 +11,6 @@ namespace svghost
 		static void Main()
 		{
 			new WebHostBuilder()
-				.ConfigureLogging(builder => builder.AddConsole())
 				.UseKestrel(options =>
 				{
 					options.Listen(IPAddress.Any, 5073);

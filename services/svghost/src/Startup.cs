@@ -50,21 +50,11 @@ namespace svghost
 				{".htm", "text/html; charset=utf-8"},
 				{".html", "text/html; charset=utf-8"},
 
-				{".json", "application/json; charset=utf-8"},
-
 				{".css", "text/css; charset=utf-8"},
 				{".js", "application/javascript; charset=utf-8"},
 
 				{".svg", "image/svg+xml"},
-				{".gif", "image/gif"},
 				{".png", "image/png"},
-				{".jpg", "image/jpeg"},
-				{".jpeg", "image/jpeg"},
-				{".webp", "image/webp"},
-
-				{".eot", "application/vnd.ms-fontobject"},
-				{".woff", "application/font-woff"},
-				{".woff2", "application/font-woff2"},
 
 				{".ico", "image/x-icon"}
 			}),

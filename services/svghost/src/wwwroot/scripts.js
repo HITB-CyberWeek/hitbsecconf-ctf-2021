@@ -118,9 +118,7 @@ $.get("/api/me").done(text => {
 
 const upload = (data) => {
 	$.post("/api/svg", {data: data, isPrivate: $("#private").is(":checked")}).fail(() => error("post /api/svg failed"));
-	setTimeout(() => $.get("/api/list?skip=0&take=20").done(json => {
-		update(json);
-	}).fail(() => error("/api/list failed")), 100);
+	setTimeout(() => $.get("/api/list?skip=0&take=20").done(json => update(json)).fail(() => error("/api/list failed")), 100);
 }
 
 $("#upload").click(() => {
@@ -129,6 +127,7 @@ $("#upload").click(() => {
 	else
 		upload(canvas.getSvgString())
 });
+
 $("#publish-file").click(() => $("#file").data("action", true));
 $("#load-file").click(() => $("#file").data("action", false));
 $("#file").change(e => {

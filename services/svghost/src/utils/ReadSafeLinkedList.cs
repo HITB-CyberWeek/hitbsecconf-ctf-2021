@@ -5,6 +5,7 @@ using System.Threading;
 
 namespace svghost.utils
 {
+	/// <summary>ReadSafeLinkedList is thread safe for use by multiple reader threads and a single writing thread</summary>
 	public sealed class ReadSafeLinkedListNode<T>
 	{
 		public class LinkedList : IEnumerable<T>

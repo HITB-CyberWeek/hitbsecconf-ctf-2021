@@ -81,7 +81,7 @@ namespace svghost.utils.svg
 		private static readonly XmlReaderSettings XmlSettings = new()
 		{
 			XmlResolver = null,
-			DtdProcessing = DtdProcessing.Ignore,
+			DtdProcessing = DtdProcessing.Prohibit,
 			MaxCharactersFromEntities = 1024,
 			MaxCharactersInDocument = 512 * 1024,
 			IgnoreProcessingInstructions = true

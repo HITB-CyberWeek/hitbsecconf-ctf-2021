@@ -13,7 +13,7 @@ namespace svghost.controllers
 	public class SvgController : ControllerBase
 	{
 		[HttpGet("/api/me")]
-		public async Task<IActionResult> Me()
+		public IActionResult Me()
 		{
 			var userId = User.FindUserId();
 			return userId == default ? StatusCode(401, "👻 not authenticated") : Ok(userId.ToString());
@@ -36,7 +36,7 @@ namespace svghost.controllers
 		[HttpGet("/api/pdf")]
 		public async Task<IActionResult> GetPdf(Guid userId, Guid fileId, bool isPrivate)
 		{
-			if(userId != User.FindUserId() && isPrivate)
+			if(isPrivate && userId != User.FindUserId())
 				return StatusCode(403, "👻 not authorized");
 
 			var file = SvgStore.FindFilePath(userId == default ? User.FindUserId() : userId, fileId, isPrivate, sanitized: true);
@@ -71,13 +71,13 @@ namespace svghost.controllers
 
 			var data = Request.Form["data"].FirstOrDefault();
 			if(string.IsNullOrEmpty(data))
-				return StatusCode(400, "👻 empty");
+				return StatusCode(400, "👻 empty svg");
 
 			bool.TryParse(Request.Form["isPrivate"].FirstOrDefault(), out var isPrivate);
 
 			string sanitized;
 			try { sanitized = SvgSanitizer.Sanitize(data); }
-			catch { return StatusCode(400, "👻 invalid"); }
+			catch { return StatusCode(400, "👻 invalid svg"); }
 
 			var fileId = Guid.NewGuid();
 			await SvgStore.SaveAsync(userId, fileId, isPrivate, data, sanitized);
@@ -86,7 +86,7 @@ namespace svghost.controllers
 		}
 
 		[HttpGet("/api/list")]
-		public async Task<IActionResult> List(int skip, int take = 1000)
+		public IActionResult List(int skip, int take = 1000)
 			=> Ok(SvgStore.List().Skip(skip).Take(Math.Min(1000, take)));
 
 		private const int MaxPdfFileSize = 512 * 1024;
