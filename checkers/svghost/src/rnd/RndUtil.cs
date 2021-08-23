@@ -15,6 +15,8 @@ namespace checker.rnd
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetInt(int inclusiveMinValue, int exclusiveMaxValue) => ThreadStaticRnd.Next(inclusiveMinValue, exclusiveMaxValue);
 
+		public static bool Bool() => ThreadStaticRnd.Next(2) == 0;
+
 		public static Random ThreadStaticRnd => rnd ??= new Random(Guid.NewGuid().GetHashCode());
 
 		public static Task RndDelay(int max) => Task.Delay(ThreadStaticRnd.Next(max));

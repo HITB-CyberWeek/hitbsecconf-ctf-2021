@@ -67,7 +67,7 @@ namespace checker.svghost
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
 			var svg = RndSvg.Generate(flag);
-			await Console.Error.WriteLineAsync($"private svg '{svg}'").ConfigureAwait(false);
+			await Console.Error.WriteLineAsync($"private svg '{SvgToLog(svg)}'").ConfigureAwait(false);
 
 			var data = $"data={WebUtility.UrlEncode(svg)}&isPrivate=true";
 			result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}}, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
@@ -185,7 +185,7 @@ namespace checker.svghost
 		private static async Task<Guid> PutPublicPdf(AsyncHttpClient client, string text)
 		{
 			var svg = RndSvg.Generate(text);
-			await Console.Error.WriteLineAsync($"public svg '{svg}'").ConfigureAwait(false);
+			await Console.Error.WriteLineAsync($"public svg '{SvgToLog(svg)}'").ConfigureAwait(false);
 
 			var data = $"data={WebUtility.UrlEncode(svg)}&isPrivate=false";
 			var result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}}, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
@@ -212,6 +212,9 @@ namespace checker.svghost
 			if(parsed == null || !parsed.Contains(text))
 				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: invalid pdf");
 		}
+
+		private static string SvgToLog(string svg)
+			=> svg.Length > 256 ? svg.Substring(0, 256).Replace('\r', ' ').Replace('\n', ' ') + "..." : svg.Replace('\r', ' ').Replace('\n', ' ');
 
 		private const int Port = 5073;
 
