@@ -44,3 +44,4 @@ services: |
   {name => 'sandbox', path => 'checkers/sandbox/sandbox.checker.py', timeout => 30, tcp_port => 8000},
   {name => 'svghost', path => 'checkers/svghost/checker.sh',         timeout => 30, tcp_port => 5073},
   {name => 'xar',     path => 'checkers/xar/checker.py',             timeout => 30, tcp_port => 3000},
+  {name => 'fw',      path => 'checkers/xar/fw.checker.py',          timeout => 30},

@@ -1,0 +1,51 @@
+- hosts: checkers, master
+  tasks:
+  - name: sync catalog
+    synchronize:
+      src: "../checkers"
+      dest: "{{ cs_dir }}"
+    tags: sync
+
+  - name: checkers owner
+    file:
+      path: "{{ cs_dir }}/checkers"
+      owner: "{{ cs_user }}"
+      group: "{{ cs_user }}"
+      recurse: yes
+    tags: sync
+
+  - name: install sys deps
+    apt:
+      name:
+        - g++
+        - make
+        - libssl-dev
+        - python3-pip
+      install_recommends: no
+
+  - name: dotnet repo keys
+    apt:
+      deb: https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb
+
+  - name: install net-sdk
+    apt:
+      name:
+       - dotnet-sdk-5.0
+      state: latest
+      update_cache: yes
+
+  - name: build svghost checker
+    shell:
+    args:
+      cmd: dotnet publish -c Release
+      chdir: "{{ cs_dir }}/checkers/svghost/src"
+    become: yes
+    become_user: "{{ cs_user }}"
+
+  - name: python deps
+    pip:
+      executable: pip3
+      requirements: "{{ cs_dir }}/checkers/{{ item }}/requirements.txt"
+    loop:
+      - sandbox
+      - xar
