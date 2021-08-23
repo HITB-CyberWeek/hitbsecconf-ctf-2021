@@ -4,10 +4,10 @@ namespace checker.svghost
 {
 	internal class RndSvg
 	{
-		public static string Generate(string text, string flag)
+		public static string Generate(string flag)
 		{
 			//TODO
-			return $"<svg><desc>{WebUtility.HtmlEncode(flag)}</desc><text x=\"10\" y=\"10\">{WebUtility.HtmlEncode(text)}</text></svg>";
+			return $"<svg><text x=\"10\" y=\"10\" font-size=\"8\">{WebUtility.HtmlEncode(flag)}</text></svg>";
 		}
 	}
 }

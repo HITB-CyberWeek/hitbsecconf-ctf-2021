@@ -1,10 +1,12 @@
 body {
+	font-family: "Segoe UI Light","Dejavu Sans","Helvetica Neue",Arial,sans-serif;
+	font-weight: 100;
 	margin: 0;
 	padding: 0;
 	display: grid;
 	width: 100%;
 	overflow-x: hidden;
-	grid-template-columns: 110px 1fr 50px;
+	grid-template-columns: 110px minmax(auto, 1000px) auto;
 	grid-template-rows: auto;
 	grid-template-areas:
 		". header login"
@@ -38,33 +40,78 @@ a {
 	grid-area: login;
 }
 .login svg {
-	width: 100%;
-	height: 100%;
-	margin-right: 5px;
+	width: 48px;
+	height: 48px;
+	margin: 20px 20px 0 0;
+	float: right;
 }
 
 .toolbox {
 	grid-area: toolbox;
 	padding: 0 10px;
 }
-.toolbox button {
-	display: inline-block;
-	margin: 0 3px 5px 0;
+input, button {
 	font-size: 22px;
-	width: 40px;
 	height: 40px;
-	text-align: center;
 	vertical-align: middle;
+	border: 1px solid #777;
+	border-radius: 3px;
+	background-color: #eee;
+	font-family: "Segoe UI Light","Dejavu Sans","Helvetica Neue",Arial,sans-serif;
+	font-weight: 100;
+}
+button {
+	filter: drop-shadow(2px 3px 4px #777)
+}
+button:hover {
+	background-color: #ccc;
+}
+button:active {
+	transform: translate(1px, 1px);
+	background-color: #bbb;
+}
+.toolbox button {
+	margin: 0 1px 5px 1px;
+	width: 40px;
+	text-align: center;
 	/*padding: 0px 2px;*/
 }
+
 .actions {
 	grid-area: actions;
+	max-width: 999px;
+	margin-right: 10px;
+}
+#file{
+	display: none;
+}
+label[for="file"] {
+	font-size: 22px;
+	height: 28px;
+	line-height: 28px;
+	vertical-align: middle;
+	border: 1px solid #777;
+	border-radius: 3px;
+	display: inline-block;
+	padding: 5px;
+	background-color: #eee;
+	filter: drop-shadow(2px 3px 4px #777);
+	float: right;
+	margin-left: 5px;
+}
+label[for="file"]:hover {
+	background-color: #ccc;
+}
+label[for="file"]:active {
+	transform: translate(1px, 1px);
+	background-color: #bbb;
 }
 
 .list {
 	grid-area: list;
 	margin: 20px 5px;
-	max-width: 1120px;
+	max-width: 1099px;
+	height: 0;
 }
 .list tr:not(:first-child) td {
 	border-top: 1px solid #bbb;
@@ -74,6 +121,9 @@ a {
 	padding: 4px;
 	font-size: 18px;
 	font-family: monospace;
+}
+.list td:last-child {
+	color: #bbb;
 }
 
 .hidden {

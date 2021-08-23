@@ -14,6 +14,7 @@ namespace svghost
 		public DateTime Date { get; set; }
 		public Guid UserId { get; set; }
 		public Guid FileId { get; set; }
+		public bool IsPrivate { get; set; }
 	}
 
 	public static class SvgStore
@@ -31,19 +32,19 @@ namespace svghost
 			}, null, 30000, 30000);
 		}
 
-		public static async Task SaveAsync(Guid userId, Guid fileId, string data, string sanitized)
+		public static async Task SaveAsync(Guid userId, Guid fileId, bool isPrivate, string data, string sanitized)
 		{
 			var utcNow = DateTime.UtcNow;
-			await SaveAsync(utcNow, userId, fileId, data, false);
-			await SaveAsync(utcNow, userId, fileId, sanitized, true);
-			lock(Svgs) Svgs.AddFirst(new Svg {Date = utcNow, UserId = userId, FileId = fileId});
+			await SaveAsync(utcNow, userId, fileId, isPrivate, data, false);
+			await SaveAsync(utcNow, userId, fileId, isPrivate, sanitized, true);
+			lock(Svgs) Svgs.AddFirst(new Svg {Date = utcNow, UserId = userId, FileId = fileId, IsPrivate = isPrivate});
 		}
 
-		private static async Task SaveAsync(DateTime utcNow, Guid userId, Guid fileId, string data, bool sanitized)
+		private static async Task SaveAsync(DateTime utcNow, Guid userId, Guid fileId, bool isPrivate, string data, bool sanitized)
 		{
 			var dir = Path.Combine(DataDirectory, RollingValue(utcNow).ToString(NumberFormatInfo.InvariantInfo));
 			Directory.CreateDirectory(dir);
-			var path = Path.Combine(dir, ToFilename(userId, fileId, sanitized));
+			var path = Path.Combine(dir, ToFilename(userId, fileId, isPrivate, sanitized));
 			var tmp = path + ".tmp";
 			await File.WriteAllTextAsync(tmp, data);
 			File.Move(tmp, path, true);
@@ -63,12 +64,12 @@ namespace svghost
 			.Select(item => ParseFileName(item.file, item.time))
 			.Where(item => !item.Equals(default));
 
-		public static string FindFilePath(Guid userId, Guid fileId, bool sanitized)
-			=> LastRollingFolders().Select(rolling => Path.Combine(DataDirectory, rolling, ToFilename(userId, fileId, sanitized))).FirstOrDefault(File.Exists);
+		public static string FindFilePath(Guid userId, Guid fileId, bool isPrivate, bool sanitized)
+			=> LastRollingFolders().Select(rolling => Path.Combine(DataDirectory, rolling, ToFilename(userId, fileId, isPrivate, sanitized))).FirstOrDefault(File.Exists);
 
-		public static async Task<string> FindDataAsync(Guid userId, Guid fileId, bool sanitized)
+		public static async Task<string> FindDataAsync(Guid userId, Guid fileId, bool isPrivate, bool sanitized)
 		{
-			var filepath = FindFilePath(userId, fileId, sanitized);
+			var filepath = FindFilePath(userId, fileId, isPrivate, sanitized);
 			if(filepath == null)
 				return null;
 
@@ -77,15 +78,15 @@ namespace svghost
 			catch(FileNotFoundException) { return null; }
 		}
 
-		private static string ToFilename(Guid userId, Guid fileId, bool sanitized)
-			=> $"{userId:N}-{fileId:N}-{(sanitized ? "s" : "r")}{FileExtension}";
+		private static string ToFilename(Guid userId, Guid fileId, bool isPrivate, bool sanitized)
+			=> $"{userId:N}-{fileId:N}-{isPrivate}-{sanitized}{FileExtension}".ToLowerInvariant();
 
 		private static Svg ParseFileName(string filepath, DateTime time)
 		{
 			var parts = Path.GetFileNameWithoutExtension(filepath).Split('-');
-			if(!(Guid.TryParseExact(parts[0], "N", out var userId) && Guid.TryParseExact(parts[1], "N", out var fileId)))
+			if(!(Guid.TryParseExact(parts[0], "N", out var userId) && Guid.TryParseExact(parts[1], "N", out var fileId) && bool.TryParse(parts[2], out var isPrivate)))
 				return default;
-			return new Svg {UserId = userId, FileId = fileId, Date = time};
+			return new Svg {UserId = userId, FileId = fileId, Date = time, IsPrivate = isPrivate};
 		}
 
 		private static IEnumerable<string> LastRollingFolders()

@@ -2,8 +2,6 @@ import SvgCanvas from "/svgedit-5.1.0/editor/svgcanvas.js";
 
 const container = document.querySelector("#canvas");
 const {width, height} = {width: Math.min($(window).width() - 120, 999), height: 400};
-window.width = width;
-window.height = height;
 
 const config = {
 	initFill: {color: "ffffff", opacity: 1},
@@ -15,31 +13,30 @@ const config = {
 	baseUnit: "px"
 };
 
-window.canvas = new SvgCanvas(container, config);
+const canvas = new SvgCanvas(container, config);
 
 canvas.textActions.setInputElem(document.querySelector("#text-input"));
-$("#text-input").on("keyup input", function () {
+$("#text-input").on("keyup input", function() {
 	canvas.setTextContent(this.value);
 }).on("blur", function() {
 	$(this).val("");
 });
 
-let stroke = function(color) {
+const stroke = function(color) {
 	canvas.getSelectedElems().forEach((el) => {
 		el.setAttribute("stroke", color);
 	});
 };
-let strokeWidth = function(width) {
+const strokeWidth = function(width) {
 	canvas.getSelectedElems().forEach((el) => {
 		el.setAttribute("stroke-width", width);
 	});
 };
-let fill = function(color) {
+const fill = function(color) {
 	canvas.getSelectedElems().forEach((el) => {
 		el.setAttribute("fill", color);
 	});
 };
-
 
 $("#select").click(() => canvas.setMode("select"));
 $("#delete").click(() => canvas.deleteSelectedElements());
@@ -51,14 +48,13 @@ $("#ellipse").click(() => canvas.setMode("ellipse"));
 $("#text").click(() => canvas.setMode("text"));
 $("#fill").click(() => fill("#" + (prompt("Enter hex color value") || "").replace(/[^0-9a-f]+/i, "")));
 $("#stroke").click(() => stroke("#" + (prompt("Enter hex color value") || "").replace(/[^0-9a-f]+/i, "")));
-$("#clear").click(() => { canvas.clear(); canvas.updateCanvas(width, height); });
-$("#show").click(() => console.log(canvas.getSvgString()));
 
 canvas.updateCanvas(width, height);
 
+var me;
 
 let uuidTo5Colors = (id) => {
-	const str = id.replaceAll('-', '');
+	const str = id.replace(/-/g, '');
 	if(!/^[0-9a-f]{32}$/i.test(str))
 		return ["#000", "#000", "#000", "#000", "#000"];
 	let colors = [];
@@ -91,15 +87,17 @@ let update = (json) => {
 		$td[0].innerHTML = uuidToLogo(item.userId);
 		$td[1].textContent = item.date.replace(/\..*$/, '').replace('T', ' ');
 		$td[2].textContent = item.fileId;
-		$td[3].firstChild.href = "/api/svg?userId=" + encodeURIComponent(item.userId) + "&fileId=" + encodeURIComponent(item.fileId);
-		($td[3].firstChild.classList)[json[i].userId !== window["me"] ? "add" : "remove"]("hidden");
-		$td[4].firstChild.href = "/api/pdf?userId=" + encodeURIComponent(item.userId) + "&fileId=" + encodeURIComponent(item.fileId);
+		$td[3].firstChild.href = "/api/svg?userId=" + encodeURIComponent(item.userId) + "&fileId=" + encodeURIComponent(item.fileId) + "&isPrivate=" + Boolean(item.isPrivate);
+		($td[3].firstChild.classList)[item.userId !== me ? "add" : "remove"]("hidden");
+		$td[4].firstChild.href = "/api/pdf?userId=" + encodeURIComponent(item.userId) + "&fileId=" + encodeURIComponent(item.fileId) + "&isPrivate=" + Boolean(item.isPrivate);
+		($td[4].firstChild.classList)[item.isPrivate && item.userId !== me ? "add" : "remove"]("hidden");
+		$td[5].textContent = item.isPrivate ? '🔒\uFE0E' : '🔓\uFE0E';
 		let clone = document.importNode(template, true);
 		$body.appendChild(clone);
 	}
 };
 
-let error = (text) => alert(text);
+const error = (text) => alert(text);
 
 $(document).on("click", "a.link-pdf", function() {
 	open($(this).prop("href"), "Preview", "toolbar=no,menubar=no,width=600,height=300,left=120,top=180");
@@ -110,22 +108,42 @@ $(document).on("click", "a.link-svg", function() {
 	return false;
 });
 
-fetch("/api/me", {"credentials":"same-origin"}).then(response => {
-	if(!response.ok) response.text().then(text => { error(text); });
-	response.text().then(text => {
-		window.me = text;
-		$(".login").html(uuidToLogo(text));
-		fetch("/api/list?skip=0&take=20").then(response => {
-			response.json().then(update);
-		}).catch(() => error("/api/list failed"));
-	});
-}).catch(() => error("/api/me failed"));
+$.get("/api/me").done(text => {
+	me = text;
+	$(".login").html(uuidToLogo(text));
+	$.get("/api/list?skip=0&take=20").done(json => {
+		update(json);
+	}).fail(() => error("/api/list failed"));
+}).fail(() => error("/api/me failed"));
 
-$("#upload").click(function(e) {
-	$.post("/api/svg", {data: canvas.getSvgString()});
-	setTimeout(() => fetch("/api/list?skip=0&take=20").then(response => {
-		response.json().then(update);
-	}).catch(() => error("/api/list failed")), 100);
+const upload = (data) => {
+	$.post("/api/svg", {data: data, isPrivate: $("#private").is(":checked")}).fail(() => error("post /api/svg failed"));
+	setTimeout(() => $.get("/api/list?skip=0&take=20").done(json => {
+		update(json);
+	}).fail(() => error("/api/list failed")), 100);
+}
+
+$("#upload").click(() => {
+	if(!canvas.getVisibleElements().length)
+		error("empty svg");
+	else
+		upload(canvas.getSvgString())
+});
+$("#publish-file").click(() => $("#file").data("action", true));
+$("#load-file").click(() => $("#file").data("action", false));
+$("#file").change(e => {
+	if(!e.target.files || !e.target.files.length)
+		return;
+	const action = $("#file").data("action");
+	const reader = new FileReader();
+	reader.addEventListener("load", e => {
+		if(action)
+			upload(e.target.result);
+		else
+			canvas.setSvgString(e.target.result);
+	});
+	reader.readAsText(e.target.files[0]);
+	e.target.value = null;
 });
 
 $("#canvas").mousedown(() => $(document).scrollTop(0));

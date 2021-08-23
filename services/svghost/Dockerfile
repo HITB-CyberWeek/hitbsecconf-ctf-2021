@@ -1,9 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:5.0-alpine
 WORKDIR /app
 
-COPY ./start.sh .
-COPY ./out/ /app/
-
 RUN apk add --no-cache icu-libs gnu-libiconv
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
 RUN apk add --no-cache harfbuzz pango librsvg gdk-pixbuf
@@ -18,6 +15,9 @@ RUN ln -s /usr/lib/libgdiplus.so.0 libgdiplus.so
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 COMPlus_JitTelemetry=0 COMPlus_legacyCorruptedStateExceptionsPolicy=1 COMPlus_legacyUnhandledExceptionPolicy=1 ASPNETCORE_ENVIRONMENT=Production LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
 RUN adduser --system --home /app --shell /usr/sbin/nologin --no-create-home --disabled-password svghost
+
+COPY ./start.sh .
+COPY ./out/ /app/
 
 RUN mkdir -p /app/data
 VOLUME /app/data

@@ -59,13 +59,11 @@ namespace checker.svghost
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			var text = Guid.NewGuid().ToString();
-			var svg = RndSvg.Generate(text, flag);
+			var svg = RndSvg.Generate(flag);
 			await Console.Error.WriteLineAsync(svg).ConfigureAwait(false);
 
-			var data = $"data={WebUtility.UrlEncode(svg)}";
-			var headers = new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}};
-			result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, headers, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
+			var data = $"data={WebUtility.UrlEncode(svg)}&isPrivate=true";
+			result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}}, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"post {ApiSvg} failed");
 
@@ -93,20 +91,6 @@ namespace checker.svghost
 
 			if(!svgs.Any(svg => svg.UserId == userId && svg.FileId == fileId))
 				throw new CheckerException(ExitCode.MUMBLE, $"posted svg not found in {ApiList} response");
-
-			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
-
-			var query = $"?userId={userId}&fileId={fileId}";
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiPdf + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
-			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiPdf} failed");
-
-			if(!(result.Body?.Length > PdfSign.Length) || Encoding.ASCII.GetString(result.Body.GetBuffer(), 0, PdfSign.Length) != PdfSign)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response");
-
-			var parsed = DoIt.TryOrDefault(() => PdfUtils.PdfFirstPage2Text(result.Body, MaxPdfTextSize));
-			if(parsed == null || !parsed.Contains(text))
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response");
 
 			return $"{userId}:{fileId}:{Convert.ToBase64String(bytes)}";
 		}
@@ -136,7 +120,21 @@ namespace checker.svghost
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			var query = $"?userId={userId}&fileId={fileId}";
+			var query = $"?userId={userId}&fileId={fileId}&isPrivate=true";
+
+			result = await client.DoRequestAsync(HttpMethod.Get, ApiPdf + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+			if(result.StatusCode != HttpStatusCode.OK)
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiPdf} failed");
+
+			if(!(result.Body?.Length > PdfSign.Length) || Encoding.ASCII.GetString(result.Body.GetBuffer(), 0, PdfSign.Length) != PdfSign)
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response");
+
+			var parsed = DoIt.TryOrDefault(() => PdfUtils.PdfFirstPage2Text(result.Body, MaxPdfTextSize));
+			if(parsed == null || !parsed.Contains(flag))
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response");
+
+			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
+
 			result = await client.DoRequestAsync(HttpMethod.Get, ApiSvg + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
 				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiSvg} failed");

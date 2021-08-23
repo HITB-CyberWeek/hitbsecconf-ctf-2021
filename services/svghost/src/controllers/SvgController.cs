@@ -20,13 +20,12 @@ namespace svghost.controllers
 		}
 
 		[HttpGet("/api/svg")]
-		public async Task<IActionResult> GetRaw(Guid fileId)
+		public async Task<IActionResult> GetRaw(Guid userId, Guid fileId, bool isPrivate)
 		{
-			var userId = User.FindUserId();
-			if(userId == default)
-				return StatusCode(401, "👻 not authenticated");
+			if(User.FindUserId() != userId)
+				return StatusCode(403, "👻 not authorized");
 
-			var text = await SvgStore.FindDataAsync(userId, fileId, sanitized: false);
+			var text = await SvgStore.FindDataAsync(userId, fileId, isPrivate, sanitized: false);
 			if(text == null)
 				return StatusCode(404, "👻 not found");
 
@@ -35,9 +34,12 @@ namespace svghost.controllers
 		}
 
 		[HttpGet("/api/pdf")]
-		public async Task<IActionResult> GetPdf(Guid userId, Guid fileId)
+		public async Task<IActionResult> GetPdf(Guid userId, Guid fileId, bool isPrivate)
 		{
-			var file = SvgStore.FindFilePath(userId == default ? User.FindUserId() : userId, fileId, sanitized: true);
+			if(userId != User.FindUserId() && isPrivate)
+				return StatusCode(403, "👻 not authorized");
+
+			var file = SvgStore.FindFilePath(userId == default ? User.FindUserId() : userId, fileId, isPrivate, sanitized: true);
 			if(file == null)
 				return StatusCode(404, "👻 not found");
 
@@ -71,12 +73,14 @@ namespace svghost.controllers
 			if(string.IsNullOrEmpty(data))
 				return StatusCode(400, "👻 empty");
 
+			bool.TryParse(Request.Form["isPrivate"].FirstOrDefault(), out var isPrivate);
+
 			string sanitized;
 			try { sanitized = SvgSanitizer.Sanitize(data); }
 			catch { return StatusCode(400, "👻 invalid"); }
 
 			var fileId = Guid.NewGuid();
-			await SvgStore.SaveAsync(userId, fileId, data, sanitized);
+			await SvgStore.SaveAsync(userId, fileId, isPrivate, data, sanitized);
 
 			return Ok(fileId.ToString());
 		}

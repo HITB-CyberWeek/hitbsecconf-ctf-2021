@@ -35,17 +35,14 @@
 
 			<button id="fill" title="fill">■</button>
 			<button id="stroke" title="stroke">□</button>
-
-			<br/><br/>
-
-			<button id="clear" title="CLEAR">✖</button>
-			<button id="show" title="get">🗔</button>
 		</div>
 
 		<div id="canvas"></div>
 
 		<div class="actions">
-			<button id="upload">Upload</button>
+			<button id="upload">Publish</button>
+			<input id="private" type="checkbox"/><label for="private">private</label>
+			<input type="file" id="file" accept=".svg"/><label id="publish-file" for="file">Publish from file</label><label id="load-file" for="file">Load from file</label>
 		</div>
 
 		<table class="list" cellspacing="0"></table>
@@ -55,6 +52,7 @@
 			<td class="list-id"></td>
 			<td title="source" class="list-source"><a href="#" class="link-svg" target="_blank">🗎</a></td>
 			<td title="preview" class="list-preview"><a href="#" class="link-pdf" target="_blank">🖶</a></td>
+			<td title="access" class="list-private"></td>
 		</tr></template>
 
 		<!-- Not visible, but still used -->
