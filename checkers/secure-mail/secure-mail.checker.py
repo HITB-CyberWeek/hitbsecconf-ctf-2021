@@ -8,31 +8,15 @@ from email.headerregistry import Address
 from email.utils import make_msgid
 import asyncio
 import websockets
+from smtp_client import SmtpClient
+from web_client import WebClient
+from user_db import UserDb
+from checker_helper import *
 
-OK, CORRUPT, MUMBLE, DOWN, CHECKER_ERROR = 101, 102, 103, 104, 110
 SMTP_PORT = 2525
-
-def trace(message):
-    print(message, file=sys.stderr)
-
-def verdict(exit_code, public="", private=""):
-    if public:
-        print(public)
-    if private:
-        print(private, file=sys.stderr)
-    sys.exit(exit_code)
 
 def info():
     verdict(OK, "vulns: 1")
-
-async def hello():
-    uri = "ws://localhost:8080"
-    async with websockets.connect(uri) as websocket:
-        await websocket.send('test')
-        print(f"> test")
-
-        greeting = await websocket.recv()
-        print(f"< {greeting}")
 
 def check(args):
     if len(args) != 1:
@@ -44,6 +28,8 @@ def check(args):
     msg["Subject"] = "Interesting business proposal"
     msg["From"] = Address("Elon Musk", "Elon.Musk", "tesla.com")
     msg["To"] = Address("Receiver", "receiver", "hackerdom.com")
+    msg["Cc"] = Address("Receiver", "receiver1", "hackerdom.com")
+    msg["Bcc"] = Address("Receiver", "user", "hackerdom.com")
 
     text = """\
 Dear Sir/Madam,
@@ -75,17 +61,23 @@ Elon Musk"""
     with smtplib.SMTP(host, SMTP_PORT) as s:
         s.send_message(msg)
 
-    asyncio.get_event_loop().run_until_complete(hello())
-
     sys.exit(OK)
 
-def put(args):
+async def put(args):
     if len(args) != 4:
         verdict(CHECKER_ERROR, "Wrong args count", "Wrong args count for put()")
     host, flag_id, flag_data, vuln = args
     trace("put(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
 
-    sys.exit(OK)
+    smtp_client = SmtpClient(host)
+
+    with UserDb() as db:
+        user = db.create_user(host, flag_id)
+        async with WebClient(host) as wc:
+            await wc.create_user(user.name, user.password)
+        smtp_client.send_secret_message(to=user.name, secret=flag_data)
+
+    verdict(OK)
 
 def get(args):
     if len(args) != 4:
@@ -104,7 +96,7 @@ def main(args):
         elif args[0] == "check":
             check(args[1:])
         elif args[0] == "put":
-            put(args[1:])
+            asyncio.get_event_loop().run_until_complete(put(args[1:]))
         elif args[0] == "get":
             get(args[1:])
         else:
