@@ -290,6 +290,7 @@ namespace checker.rnd
 
 		public static string RandomText(int n)
 		{
+			if(n <= 0) return string.Empty;
 			var builder = new StringBuilder(n);
 			while(builder.Length < n)
 			{

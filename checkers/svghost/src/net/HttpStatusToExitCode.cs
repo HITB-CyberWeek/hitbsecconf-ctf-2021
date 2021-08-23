@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 
 namespace checker.net
 {
@@ -12,5 +13,8 @@ namespace checker.net
 				return ExitCode.DOWN;
 			return ExitCode.MUMBLE;
 		}
+
+		public static string ToReadableCode(this HttpStatusCode status)
+			=> status == 0 ? "connection failed" : (int)status == 499 ? "timed out" : $"{(int)status} {(Enum.IsDefined(status) ? status.ToString("G") : "Unknown")}";
 	}
 }

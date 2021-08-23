@@ -1,1 +1,1 @@
-dotnet-runtime-5.0
+dotnet-sdk-5.0

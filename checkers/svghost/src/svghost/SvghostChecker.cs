@@ -22,28 +22,18 @@ namespace checker.svghost
 
 			var result = await client.DoRequestAsync(HttpMethod.Get, "/", null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), "get / failed");
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get / failed: {result.StatusCode.ToReadableCode()}");
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
 			result = await client.DoRequestAsync(HttpMethod.Get, ApiMe, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiMe} failed");
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiMe} failed: {result.StatusCode.ToReadableCode()}");
 
 			if(!Guid.TryParseExact(result.BodyAsString, "D", out var userId) || userId == default)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiMe} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiMe} response: uuid expected");
 
-			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
-
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiList, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
-			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiList} failed");
-
-			var svgs = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<List<Svg>>(result.BodyAsString));
-			if(svgs == null)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiList} response");
-
-			await Console.Error.WriteLineAsync($"found '{svgs.Count}' svgs").ConfigureAwait(false);
+			await Console.Error.WriteLineAsync($"userId '{userId}'").ConfigureAwait(false);
 		}
 
 		public async Task<string> Put(string host, string id, string flag, int vuln)
@@ -52,45 +42,87 @@ namespace checker.svghost
 
 			var result = await client.DoRequestAsync(HttpMethod.Get, ApiMe, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiMe} failed");
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiMe} failed: {result.StatusCode.ToReadableCode()}");
 
 			if(!Guid.TryParseExact(result.BodyAsString, "D", out var userId) || userId == default)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiMe} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiMe} response: uuid expected");
 
+			await Console.Error.WriteLineAsync($"userId '{userId}'").ConfigureAwait(false);
+
+			var files = new List<(string unique, Guid fileId)>();
+			async Task PutPublicFileIfRnd(AsyncHttpClient client)
+			{
+				if(RndUtil.GetInt(0, 9) != 0)
+					return;
+
+				var unique = Guid.NewGuid().ToString();
+				var text = string.Join(" ", new[] {RndText.RandomText(RndUtil.GetInt(0, 64)), unique, RndText.RandomText(RndUtil.GetInt(0, 64))}.Where(s => !string.IsNullOrWhiteSpace(s)));
+				var publicFileId = await PutPublicPdf(client, text).ConfigureAwait(false);
+
+				files.Add((unique, fileId: publicFileId));
+			}
+
+			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
+			await PutPublicFileIfRnd(client).ConfigureAwait(false);
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
 			var svg = RndSvg.Generate(flag);
-			await Console.Error.WriteLineAsync(svg).ConfigureAwait(false);
+			await Console.Error.WriteLineAsync($"private svg '{svg}'").ConfigureAwait(false);
 
 			var data = $"data={WebUtility.UrlEncode(svg)}&isPrivate=true";
 			result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}}, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"post {ApiSvg} failed");
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"post {ApiSvg} failed: {result.StatusCode.ToReadableCode()}");
 
-			if(!Guid.TryParseExact(result.BodyAsString, "D", out var fileId) || userId == default)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiSvg} response");
+			if(!Guid.TryParseExact(result.BodyAsString, "D", out var fileId) || fileId == default)
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiSvg} response: uuid expected");
 
-			var cookie = client.Cookies.GetCookieHeader(GetBaseUri(host));
-			await Console.Error.WriteLineAsync($"cookie '{cookie}'").ConfigureAwait(false);
+			var cookie = client.Cookies?.GetCookieHeader(GetBaseUri(host));
+			await Console.Error.WriteLineAsync($"cookie '{(cookie?.Length > MaxCookieSize ? cookie.Substring(0, MaxCookieSize) + "..." : cookie)}' with length '{cookie?.Length ?? 0}'").ConfigureAwait(false);
+
+			if(cookie == null || cookie.Length > MaxCookieSize)
+				throw new CheckerException(ExitCode.MUMBLE, "too large or invalid cookies");
 
 			var bytes = DoIt.TryOrDefault(() => Encoding.UTF8.GetBytes(cookie));
-			if(bytes == null || bytes.Length > 1024)
+			if(bytes == null || bytes.Length > MaxCookieSize)
 				throw new CheckerException(ExitCode.MUMBLE, "too large or invalid cookies");
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
+			await PutPublicFileIfRnd(client).ConfigureAwait(false);
+			await RndUtil.RndDelay(MaxDelayBeforeList).ConfigureAwait(false);
 
-			client = new AsyncHttpClient(GetBaseUri(host));
+			client = new AsyncHttpClient(GetBaseUri(host)); //NOTE: Discard cookies and check listing
 
-			result = await client.DoRequestAsync(HttpMethod.Get, ApiList, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
-			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiList} failed");
+			int skip = 0;
+			Svg found = null;
+			for(int i = 0; i < 5; i++)
+			{
+				var query = $"?skip={skip}&take=1000";
+				result = await client.DoRequestAsync(HttpMethod.Get, ApiList + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+				if(result.StatusCode != HttpStatusCode.OK)
+					throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiList} failed: {result.StatusCode.ToReadableCode()}");
 
-			var svgs = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<List<Svg>>(result.BodyAsString));
-			if(svgs == null)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiList} response");
+				var svgs = DoIt.TryOrDefault(() => JsonSerializer.Deserialize<List<Svg>>(result.BodyAsString));
+				if(svgs == null)
+					throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiList} response: svg collection expected");
 
-			if(!svgs.Any(svg => svg.UserId == userId && svg.FileId == fileId))
+				await Console.Error.WriteLineAsync($"found '{svgs.Count}' svgs").ConfigureAwait(false);
+
+				found = svgs.FirstOrDefault(svg => svg.UserId == userId && svg.FileId == fileId);
+				if(found != null || svgs.Count == 0)
+					break;
+
+				skip = svgs.Count;
+			}
+
+			if(found == null)
 				throw new CheckerException(ExitCode.MUMBLE, $"posted svg not found in {ApiList} response");
+
+			foreach(var publicFileId in files)
+			{
+				await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
+				await CheckPublicPdfContainsText(client, userId, publicFileId.fileId, publicFileId.unique).ConfigureAwait(false);
+			}
 
 			return $"{userId}:{fileId}:{Convert.ToBase64String(bytes)}";
 		}
@@ -105,51 +137,90 @@ namespace checker.svghost
 
 			var client = new AsyncHttpClient(GetBaseUri(host), true);
 
-			await Console.Error.WriteLineAsync($"login by cookie '{cookie}'").ConfigureAwait(false);
+			await Console.Error.WriteLineAsync($"saved userId '{userId}', saved fileId '{fileId}', use cookie '{cookie}'").ConfigureAwait(false);
 			client.Cookies.SetCookies(GetBaseUri(host), cookie);
 
 			var result = await client.DoRequestAsync(HttpMethod.Get, ApiMe, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
 			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiMe} failed");
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiMe} failed: {result.StatusCode.ToReadableCode()}");
 
 			if(!Guid.TryParseExact(result.BodyAsString, "D", out var me))
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiMe} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiMe} response: uuid expected");
+
+			await Console.Error.WriteLineAsync($"userId '{me}'").ConfigureAwait(false);
 
 			if(me != userId)
-				throw new CheckerException(ExitCode.MUMBLE, $"auth failed: {ApiMe} response changed");
+				throw new CheckerException(ExitCode.MUMBLE, $"auth failed: {ApiMe} uuid mismatch");
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
 			var query = $"?userId={userId}&fileId={fileId}&isPrivate=true";
 
 			result = await client.DoRequestAsync(HttpMethod.Get, ApiPdf + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+			if(result.StatusCode == HttpStatusCode.NotFound)
+				throw new CheckerException(ExitCode.CORRUPT, $"get {ApiPdf} failed: {result.StatusCode.ToReadableCode()}");
 			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiPdf} failed");
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiPdf} failed: {result.StatusCode.ToReadableCode()}");
 
 			if(!(result.Body?.Length > PdfSign.Length) || Encoding.ASCII.GetString(result.Body.GetBuffer(), 0, PdfSign.Length) != PdfSign)
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response");
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: pdf expected");
 
 			var parsed = DoIt.TryOrDefault(() => PdfUtils.PdfFirstPage2Text(result.Body, MaxPdfTextSize));
 			if(parsed == null || !parsed.Contains(flag))
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response");
+				throw new CheckerException(ExitCode.CORRUPT, $"invalid {ApiPdf} response: flag not found");
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
 			result = await client.DoRequestAsync(HttpMethod.Get, ApiSvg + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+			if(result.StatusCode == HttpStatusCode.NotFound)
+				throw new CheckerException(ExitCode.CORRUPT, $"get {ApiSvg} failed: {result.StatusCode.ToReadableCode()}");
 			if(result.StatusCode != HttpStatusCode.OK)
-				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiSvg} failed");
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiSvg} failed: {result.StatusCode.ToReadableCode()}");
 
 			var svg = result.BodyAsString;
 			if(svg == null || !svg.Contains(flag))
-				throw new CheckerException(ExitCode.CORRUPT, "flag not found");
+				throw new CheckerException(ExitCode.CORRUPT, $"invalid {ApiSvg} response: flag not found");
+		}
+
+		private static async Task<Guid> PutPublicPdf(AsyncHttpClient client, string text)
+		{
+			var svg = RndSvg.Generate(text);
+			await Console.Error.WriteLineAsync($"public svg '{svg}'").ConfigureAwait(false);
+
+			var data = $"data={WebUtility.UrlEncode(svg)}&isPrivate=false";
+			var result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}}, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
+			if(result.StatusCode != HttpStatusCode.OK)
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"post {ApiSvg} failed: {result.StatusCode.ToReadableCode()}");
+
+			if(!Guid.TryParseExact(result.BodyAsString, "D", out var fileId) || fileId == default)
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiSvg} response: uuid expected");
+
+			return fileId;
+		}
+
+		private static async Task CheckPublicPdfContainsText(AsyncHttpClient client, Guid userId, Guid fileId, string text)
+		{
+			var query = $"?userId={userId}&fileId={fileId}&isPrivate=false";
+			var result = await client.DoRequestAsync(HttpMethod.Get, ApiPdf + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
+			if(result.StatusCode != HttpStatusCode.OK)
+				throw new CheckerException(result.StatusCode.ToExitCode(), $"get {ApiPdf} failed: {result.StatusCode.ToReadableCode()}");
+
+			if(!(result.Body?.Length > PdfSign.Length) || Encoding.ASCII.GetString(result.Body.GetBuffer(), 0, PdfSign.Length) != PdfSign)
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: pdf expected");
+
+			var parsed = DoIt.TryOrDefault(() => PdfUtils.PdfFirstPage2Text(result.Body, MaxPdfTextSize));
+			if(parsed == null || !parsed.Contains(text))
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: invalid pdf");
 		}
 
 		private const int Port = 5073;
 
 		private const int MaxHttpBodySize = 512 * 1024;
-		private const int NetworkOpTimeout = 10000;
+		private const int MaxCookieSize = 1024;
 
 		private const int MaxDelay = 1000;
+		private const int MaxDelayBeforeList = 8000;
+		private const int NetworkOpTimeout = 8000;
 
 		private static Uri GetBaseUri(string host) => new($"http://{host}:{Port}/");
 

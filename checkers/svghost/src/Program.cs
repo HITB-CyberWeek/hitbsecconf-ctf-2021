@@ -66,17 +66,18 @@ namespace checker
 				try
 				{
 					var vulns = (await checker.Info().ConfigureAwait(false)).Split(':').Skip(1).Select(v => int.Parse(v.Trim())).ToArray();
+					await StderrWriteLineColoredAsync("CHECK", ConsoleColor.Yellow).ConfigureAwait(false);
 					await checker.Check(host).ConfigureAwait(false);
 
 					var vuln = RndDbg.RandomVuln(vulns);
 					var flag = RndDbg.RandomFlag();
 
+					await StderrWriteLineColoredAsync("PUT", ConsoleColor.Yellow).ConfigureAwait(false);
 					var flagid = await checker.Put(host, "", flag, vuln).ConfigureAwait(false);
+					await StderrWriteLineColoredAsync("GET", ConsoleColor.Yellow).ConfigureAwait(false);
 					await checker.Get(host, flagid, flag, vuln).ConfigureAwait(false);
 
-					Console.ForegroundColor = ConsoleColor.Green;
-					await Console.Error.WriteLineAsync(ExitCode.OK.ToString()).ConfigureAwait(false);
-					Console.ResetColor();
+					await StderrWriteLineColoredAsync(ExitCode.OK.ToString(), ConsoleColor.Green).ConfigureAwait(false);
 				}
 				catch(CheckerException e)
 				{
@@ -105,6 +106,13 @@ namespace checker
 			if(!int.TryParse(args[4], out vuln))
 				throw new CheckerException(ExitCode.CHECKER_ERROR, "Invalid vuln");
 			return new CheckerArgs {Command = command, Host = args[1], Id = args[2], Flag = args[3], Vuln = vuln};
+		}
+
+		private static async Task StderrWriteLineColoredAsync(string line, ConsoleColor color)
+		{
+			Console.ForegroundColor = color;
+			await Console.Error.WriteLineAsync(line).ConfigureAwait(false);
+			Console.ResetColor();
 		}
 
 		private class CheckerArgs
