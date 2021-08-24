@@ -29,21 +29,21 @@ namespace svghost
 				var border = DateTime.UtcNow.AddMinutes(-SvgTtlMinutes);
 				while((head = Svgs.Last) != null && head.Value.Date < border)
 					lock(Svgs) Svgs.RemoveLast();
-			}, null, 30000, 30000);
+			}, null, 60000, 60000);
 		}
 
 		public static async Task SaveAsync(Guid userId, Guid fileId, bool isPrivate, string data, string sanitized)
 		{
 			var utcNow = DateTime.UtcNow;
-			await SaveAsync(utcNow, userId, fileId, isPrivate, data, false);
-			await SaveAsync(utcNow, userId, fileId, isPrivate, sanitized, true);
+			var dir = Path.Combine(DataDirectory, RollingValue(utcNow).ToString(NumberFormatInfo.InvariantInfo));
+			Directory.CreateDirectory(dir);
+			await SaveAsync(dir, userId, fileId, isPrivate, data, false);
+			await SaveAsync(dir, userId, fileId, isPrivate, sanitized, true);
 			lock(Svgs) Svgs.AddFirst(new Svg {Date = utcNow, UserId = userId, FileId = fileId, IsPrivate = isPrivate});
 		}
 
-		private static async Task SaveAsync(DateTime utcNow, Guid userId, Guid fileId, bool isPrivate, string data, bool sanitized)
+		private static async Task SaveAsync(string dir, Guid userId, Guid fileId, bool isPrivate, string data, bool sanitized)
 		{
-			var dir = Path.Combine(DataDirectory, RollingValue(utcNow).ToString(NumberFormatInfo.InvariantInfo));
-			Directory.CreateDirectory(dir);
 			var path = Path.Combine(dir, ToFilename(userId, fileId, isPrivate, sanitized));
 			var tmp = path + TmpFileExtension;
 			await File.WriteAllTextAsync(tmp, data);
@@ -84,7 +84,9 @@ namespace svghost
 		private static Svg ParseFileName(string filepath, DateTime time)
 		{
 			var parts = Path.GetFileNameWithoutExtension(filepath).Split('-');
-			if(!(Guid.TryParseExact(parts[0], "N", out var userId) && Guid.TryParseExact(parts[1], "N", out var fileId) && bool.TryParse(parts[2], out var isPrivate)))
+			if(parts.Length != 4)
+				return default;
+			if(!(Guid.TryParseExact(parts[0], "N", out var userId) && Guid.TryParseExact(parts[1], "N", out var fileId) && bool.TryParse(parts[2], out var isPrivate) && bool.TryParse(parts[3], out _)))
 				return default;
 			return new Svg {UserId = userId, FileId = fileId, Date = time, IsPrivate = isPrivate};
 		}
@@ -103,7 +105,7 @@ namespace svghost
 		private const string FileExtension = ".svg";
 		private const string TmpFileExtension = ".tmp";
 
-		private const int SvgTtlMinutes = 40;
+		private const int SvgTtlMinutes = 30;
 		private const int LastRollingFoldersToCheck = 3;
 
 		private static readonly ReadSafeLinkedListNode<Svg>.LinkedList Svgs = new();

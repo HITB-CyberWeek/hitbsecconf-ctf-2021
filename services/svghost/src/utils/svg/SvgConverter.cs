@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace svghost.utils.svg
 {
@@ -11,10 +13,12 @@ namespace svghost.utils.svg
 
 	public static class SvgConverter
 	{
+		static SvgConverter() { rsvg_set_default_dpi(72.0); }
+
+		[SecurityCritical]
+		[HandleProcessCorruptedStateExceptions]
 		public static long WriteToPdf(string filepath, Stream stream)
 		{
-			rsvg_set_default_dpi(72.0);
-
 			var handle = rsvg_handle_new_from_file(filepath, out _);
 			if(handle == IntPtr.Zero)
 				throw new SvgConversionException("Failed to load svg");
