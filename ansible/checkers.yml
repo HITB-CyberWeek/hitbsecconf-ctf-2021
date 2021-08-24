@@ -49,3 +49,4 @@
     loop:
       - sandbox
       - xar
+      - passman

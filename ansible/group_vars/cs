@@ -45,3 +45,4 @@ services: |
   {name => 'svghost', path => 'checkers/svghost/checker.sh',         timeout => 30, tcp_port => 5073},
   {name => 'xar',     path => 'checkers/xar/checker.py',             timeout => 30, tcp_port => 3000},
   {name => 'fw',      path => 'checkers/fw/fw.checker.py',           timeout => 30},
+  {name => 'passman', path => 'checkers/passman/checker.py',         timeout => 30, tcp_port => 3255},
