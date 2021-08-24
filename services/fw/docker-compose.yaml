@@ -3,8 +3,8 @@ services:
   fw:
     build: .
     ports:
-      - "0.0.0.0:17777:17777"
-      - "0.0.0.0:17778:17778"
+      - "0.0.0.0:17777:17777/udp"
+      - "0.0.0.0:17778:17778/udp"
     volumes:
       - ./data:/data
     restart: unless-stopped
