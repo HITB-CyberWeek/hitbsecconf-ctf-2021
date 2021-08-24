@@ -49,10 +49,7 @@ async function create_indices() {
     await mongoClient.connect();
     const database = mongoClient.db('emails');
     const inbox = database.collection('inbox');
-    const query = { 'rcpt_to.user': username };
-    const sort = { 'received_date' : -1 };
-    const projection = { _id: 0, 'mail_from.original' : 1, subject : 1, received_date : 1, size : 1 };
-    return await inbox.find(query).sort(sort).project(projection).toArray();
+    await inbox.createIndex({ 'rcpt_to.user': 1, 'received_date' : -1 });
   } finally {
     await mongoClient.close();
   }
@@ -106,6 +103,8 @@ const authenticateUser = (username, password) => {
     }
     return users[username] == password;
 };
+
+Promise.all([create_indices()]);
 
 const server = http.createServer(requestListener);
 const wsServer = new WebSocket.Server({server: server});
