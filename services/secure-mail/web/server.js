@@ -5,6 +5,7 @@ const path = require('path');
 const WebSocket = require('ws');
 const { convert } = require('html-to-text');
 const { MongoClient } = require("mongodb");
+const UserDb = require('./user_db.js')
 
 const port = 8080;
 const mongoClient = new MongoClient('mongodb://mongodb/emails');
@@ -45,14 +46,15 @@ const requestListener = function (request, response) {
 }
 
 async function create_indices() {
-   try {
-    await mongoClient.connect();
-    const database = mongoClient.db('emails');
-    const inbox = database.collection('inbox');
-    await inbox.createIndex({ 'rcpt_to.user': 1, 'received_date' : -1 });
-  } finally {
-    await mongoClient.close();
-  }
+    try {
+        await mongoClient.connect();
+        const database = mongoClient.db('emails');
+
+        const inbox = database.collection('inbox');
+        await inbox.createIndex({ 'rcpt_to.user': 1, 'received_date' : -1 });
+    } finally {
+        await mongoClient.close();
+    }
 }
 
 async function get_emails(username) {
@@ -86,22 +88,28 @@ async function get_email(username, latestReceivedDate, index) {
   }
 }
 
-
-
 var users = {};
-const createUser = (username, password) => {
-    if (username in users) {
-        return false;
+async function createUser(username, password) {
+    try {
+        await mongoClient.connect();
+        const database = mongoClient.db('emails');
+        console.log(`Password: ${password}`);
+        
+        const user = new UserDb(database);
+        return await user.create(username, password);
+    } finally {
+        await mongoClient.close();
     }
-    users[username] = password;
-    return true;
 };
 
-const authenticateUser = (username, password) => {
-    if (!(username in users)) {
-        return false;
+async function authenticateUser(username, password) {
+    try {
+        await mongoClient.connect();
+        const database = mongoClient.db('emails');
+        return await new UserDb(database).authenticate(username, password);
+    } finally {
+        await mongoClient.close();
     }
-    return users[username] == password;
 };
 
 Promise.all([create_indices()]);
@@ -132,7 +140,8 @@ wsServer.on('connection', function connection(ws) {
                     response.output = `${argv[0]}: invalid command arguments`;
                     response.exit_code = -1;
                 } else {
-                    if (createUser(argv[1], [argv[2]])) {
+                    var result = await createUser(argv[1], [argv[2]]);
+                    if (result) {
                         response.output = `User ${argv[1]} created`;
                     } else {
                         response.output = `${argv[0]}: user ${argv[1]} already exists`
@@ -148,7 +157,8 @@ wsServer.on('connection', function connection(ws) {
                     response.output = `${argv[0]}: invalid command arguments`;
                     response.exit_code = -1;
                 } else {
-                    if (!authenticateUser(argv[1], argv[2])) {
+                    var result = await authenticateUser(argv[1], argv[2]);
+                    if (!result) {
                         response.output = `${argv[0]}: authentication failed`
                         response.exit_code = -1;
                     } else {

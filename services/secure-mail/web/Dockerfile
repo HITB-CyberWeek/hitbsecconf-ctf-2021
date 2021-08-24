@@ -7,6 +7,7 @@ RUN npm install
 COPY ./index.html ./
 COPY ./mailapp.js ./
 COPY ./server.js ./
+COPY ./user_db.js ./
 
 USER www-data
 EXPOSE 8080
