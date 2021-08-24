@@ -8,8 +8,6 @@ const { MongoClient } = require("mongodb");
 
 const port = 8080;
 const mongoClient = new MongoClient('mongodb://mongodb/emails');
-// TODO change to ctf.hitb.org?
-const domain = 'hackerdom.com';
 
 process.on('SIGINT', () => {
   process.exit(0);
@@ -46,15 +44,29 @@ const requestListener = function (request, response) {
     });
 }
 
+async function create_indices() {
+   try {
+    await mongoClient.connect();
+    const database = mongoClient.db('emails');
+    const inbox = database.collection('inbox');
+    const query = { 'rcpt_to.user': username };
+    const sort = { 'received_date' : -1 };
+    const projection = { _id: 0, 'mail_from.original' : 1, subject : 1, received_date : 1, size : 1 };
+    return await inbox.find(query).sort(sort).project(projection).toArray();
+  } finally {
+    await mongoClient.close();
+  }
+}
+
 async function get_emails(username) {
   try {
     await mongoClient.connect();
     const database = mongoClient.db('emails');
-    const movies = database.collection('inbox');
+    const inbox = database.collection('inbox');
     const query = { 'rcpt_to.user': username };
     const sort = { 'received_date' : -1 };
     const projection = { _id: 0, 'mail_from.original' : 1, subject : 1, received_date : 1, size : 1 };
-    return await movies.find(query).sort(sort).project(projection).toArray();
+    return await inbox.find(query).sort(sort).project(projection).toArray();
   } finally {
     await mongoClient.close();
   }
