@@ -1,0 +1,13 @@
+bin/
+obj/
+Properties/
+
+settings/
+data/
+
+.idea/
+.vs/
+
+*.user
+*.suo
+*.log

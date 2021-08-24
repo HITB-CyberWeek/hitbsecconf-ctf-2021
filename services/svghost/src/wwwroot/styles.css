@@ -1,0 +1,131 @@
+body {
+	font-family: "Segoe UI Light","Dejavu Sans","Helvetica Neue",Arial,sans-serif;
+	font-weight: 100;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	width: 100%;
+	overflow-x: hidden;
+	grid-template-columns: 110px minmax(auto, 1000px) auto;
+	grid-template-rows: auto;
+	grid-template-areas:
+		". header login"
+		"toolbox main main"
+		". actions actions"
+		"list list list";
+}
+
+h1 {
+	grid-area: header;
+}
+
+a {
+	text-decoration: none;
+}
+
+#canvas {
+	grid-area: main;
+}
+#svgroot {
+	overflow: hidden;
+}
+
+#text-input {
+	position: absolute;
+	top: -1000px;
+	left: -1000px;
+}
+
+.login {
+	grid-area: login;
+}
+.login svg {
+	width: 48px;
+	height: 48px;
+	margin: 20px 20px 0 0;
+	float: right;
+}
+
+.toolbox {
+	grid-area: toolbox;
+	padding: 0 10px;
+}
+input, button {
+	font-size: 22px;
+	height: 40px;
+	vertical-align: middle;
+	border: 1px solid #777;
+	border-radius: 3px;
+	background-color: #eee;
+	font-family: "Segoe UI Light","Dejavu Sans","Helvetica Neue",Arial,sans-serif;
+	font-weight: 100;
+}
+button {
+	filter: drop-shadow(2px 3px 4px #777)
+}
+button:hover {
+	background-color: #ccc;
+}
+button:active {
+	transform: translate(1px, 1px);
+	background-color: #bbb;
+}
+.toolbox button {
+	margin: 0 1px 5px 1px;
+	width: 40px;
+	text-align: center;
+	/*padding: 0px 2px;*/
+}
+
+.actions {
+	grid-area: actions;
+	max-width: 999px;
+	margin-right: 10px;
+}
+#file{
+	display: none;
+}
+label[for="file"] {
+	font-size: 22px;
+	height: 28px;
+	line-height: 28px;
+	vertical-align: middle;
+	border: 1px solid #777;
+	border-radius: 3px;
+	display: inline-block;
+	padding: 5px;
+	background-color: #eee;
+	filter: drop-shadow(2px 3px 4px #777);
+	float: right;
+	margin-left: 5px;
+}
+label[for="file"]:hover {
+	background-color: #ccc;
+}
+label[for="file"]:active {
+	transform: translate(1px, 1px);
+	background-color: #bbb;
+}
+
+.list {
+	grid-area: list;
+	margin: 20px 5px;
+	max-width: 1099px;
+	height: 0;
+}
+.list tr:not(:first-child) td {
+	border-top: 1px solid #bbb;
+	border-spacing: 0;
+}
+.list td {
+	padding: 4px;
+	font-size: 18px;
+	font-family: monospace;
+}
+.list td:last-child {
+	color: #bbb;
+}
+
+.hidden {
+	display: none;
+}

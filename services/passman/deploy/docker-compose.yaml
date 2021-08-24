@@ -1,0 +1,12 @@
+version: '2.0'
+services:
+  passman:
+    build: .
+    ports:
+      - "0.0.0.0:3255:3255"
+    volumes:
+      - ./data:/home/passman/data
+      - ./start.sh:/home/passman/start.sh
+      - ./passman_server:/home/passman/passman_server
+    restart: unless-stopped
+    mem_limit: 2000m

@@ -1,0 +1,11 @@
+version: '3'
+services:
+  svghost:
+    container_name: svghost
+    restart: unless-stopped
+    build: .
+    ports:
+      - 5073:5073
+    volumes:
+      - ./data:/app/data
+      - ./settings:/app/settings

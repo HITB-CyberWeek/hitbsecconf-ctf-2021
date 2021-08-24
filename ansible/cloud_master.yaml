@@ -1,0 +1,7 @@
+- hosts: cloud_master
+  gather_facts: no
+  roles:
+    - common
+    - cloud_master
+#    - monitoring_client
+#    - logging_client
