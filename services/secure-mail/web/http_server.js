@@ -5,6 +5,7 @@ const WebSocket = require('ws');
 const CommandHandler = require('./command_handler.js');
 const UserDb = require('./user_db.js');
 const EmailDb = require('./email_db.js');
+const AttachmentDb = require('./attachment_db.js');
 
 class HttpServer {
     static #ROUTES = {
@@ -39,8 +40,10 @@ class HttpServer {
     }
 
     #db;
-    constructor(mongoDb) {
+    #path;
+    constructor(mongoDb, attachmentPath) {
         this.#db = mongoDb;
+        this.#path = attachmentPath;
     }
 
     async start(port) {
@@ -48,12 +51,13 @@ class HttpServer {
         const server = http.createServer(HttpServer.#requestHandler);
         const wsServer = new WebSocket.Server({server: server});
 
-        var userDb = new UserDb(this.#db);
-        var emailDb = new EmailDb(this.#db);
+        const userDb = new UserDb(this.#db);
+        const emailDb = new EmailDb(this.#db);
+        const attachmentDb = new AttachmentDb(this.#path);
         await emailDb.createIndices();
 
         wsServer.on('connection', function connection(ws) {
-            const handler = new CommandHandler(userDb, emailDb);
+            const handler = new CommandHandler(userDb, emailDb, attachmentDb);
             ws.on('message', async command => {
                 const response = await handler.handle(command);
                 if (response) {

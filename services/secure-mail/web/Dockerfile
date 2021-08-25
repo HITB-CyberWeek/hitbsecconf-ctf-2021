@@ -11,6 +11,7 @@ COPY ./http_server.js ./
 COPY ./command_handler.js ./
 COPY ./user_db.js ./
 COPY ./email_db.js ./
+COPY ./attachment_db.js ./
 
 USER www-data
 EXPOSE 8080

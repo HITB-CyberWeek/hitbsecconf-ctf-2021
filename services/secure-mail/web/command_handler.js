@@ -5,6 +5,7 @@ const ERROR = -1;
 class CommandHandler {
     #userDb;
     #emailDb;
+    #attachmentDb;
 
     #termCols;
     #user;
@@ -12,9 +13,10 @@ class CommandHandler {
     #latestReceivedDate;
     #email;
 
-    constructor(userDb, emailDb) {
+    constructor(userDb, emailDb, attachmentDb) {
         this.#userDb = userDb;
         this.#emailDb = emailDb;
+        this.#attachmentDb = attachmentDb;
     }
 
     #commands = {
@@ -24,7 +26,7 @@ class CommandHandler {
         'logout': args => this.#handleLogoutUserCommand(args),
         'ls': async args => await this.#handleLsCommand(args),
         'cd': async args => await this.#handleCdCommand(args),
-        'cat': args => this.#handleCatCommand(args)
+        'cat': async args => await this.#handleCatCommand(args)
     };
 
     #readTermSettings(command) {
@@ -180,12 +182,22 @@ class CommandHandler {
             return this.#makeResponse(`${args[0]}: invalid command arguments`, ERROR);
         }
 
-        if (args[1] == 'html' && this.#email.raw_html) {
-            return this.#makeResponse(convert(this.#email.raw_html.trimEnd(), {wordwrap: this.#termCols}));
-        }
+        if (!this.#workingDir.includes('/attachments')) {
+            if (args[1] == 'html' && this.#email.raw_html) {
+                return this.#makeResponse(convert(this.#email.raw_html.trimEnd(), {wordwrap: this.#termCols}));
+            }
 
-        if (args[1] == 'text' && this.#email.raw_text) {
-            return this.#makeResponse(this.#email.raw_text.trimEnd());
+            if (args[1] == 'text' && this.#email.raw_text) {
+                return this.#makeResponse(this.#email.raw_text.trimEnd());
+            }
+        } else {
+            const attachments = this.#email.attachments.filter(x => x.filename == args[1]);
+            if (attachments.length == 1) {
+                const data = await this.#attachmentDb.readAttachmentBase64(attachments[0].cid, attachments[0].fileName);
+                if (data) {
+                    return this.#makeResponse(data);
+                }
+            }
         }
 
         return this.#makeResponse(`${args[0]}: no such file or directory`, ERROR);
