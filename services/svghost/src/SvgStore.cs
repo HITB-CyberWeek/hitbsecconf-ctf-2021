@@ -106,7 +106,7 @@ namespace svghost
 		private const string TmpFileExtension = ".tmp";
 
 		private const int SvgTtlMinutes = 30;
-		private const int LastRollingFoldersToCheck = 3;
+		private const int LastRollingFoldersToCheck = 4;
 
 		private static readonly ReadSafeLinkedListNode<Svg>.LinkedList Svgs = new();
 		private static readonly Timer CleanupTimer;
