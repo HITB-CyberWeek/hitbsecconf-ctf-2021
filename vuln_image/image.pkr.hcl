@@ -188,7 +188,7 @@ build {
 
       # Enable auto-start for VirtualBox VM. See https://kifarunix.com/autostart-virtualbox-vms-on-system-boot-on-linux/
       "mkdir -p /etc/vbox",
-      "echo 'VBOXAUTOSTART_DB=/etc/vbox' | tee /etc/default/virtualbox",
+      "echo 'VBOXAUTOSTART_DB=/etc/vbox' | tee -a /etc/default/virtualbox",
       "echo 'VBOXAUTOSTART_CONFIG=/etc/vbox/autostartvm.cfg' | tee -a /etc/default/virtualbox",
       "echo 'default_policy = allow' | tee /etc/vbox/autostartvm.cfg",
       "VBoxManage setproperty autostartdbpath /etc/vbox/",
