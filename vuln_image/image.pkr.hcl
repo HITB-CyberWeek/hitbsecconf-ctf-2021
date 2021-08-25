@@ -188,7 +188,7 @@ build {
       "VBoxManage hostonlyif create",
       "VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1",
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --nic1 hostonly --hostonlyadapter1 vboxnet0",
-      "vboxmanage modifyvm docker.sandbox.2021.ctf.hitb.org --autostart-enabled on"
+      "vboxmanage modifyvm docker.sandbox.2021.ctf.hitb.org --autostart-enabled on",
       "VBoxManage startvm docker.sandbox.2021.ctf.hitb.org --type headless",
 
       "docker-compose up --build -d"
