@@ -1,9 +1,4 @@
 {
   "log-driver": "local",
-  "tls": true,
-  "tlsverify": false,
-  "tlscacert": "/etc/docker/ssl/ca.pem",
-  "tlscert": "/etc/docker/ssl/docker.pem",
-  "tlskey": "/etc/docker/ssl/docker.key.pem",
   "hosts": ["tcp://0.0.0.0:2376"]
 }
