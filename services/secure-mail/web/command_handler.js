@@ -151,9 +151,13 @@ class CommandHandler {
             }
 
             if (match.groups.index) {
-                this.#email = await this.#emailDb.getEmail(this.#user, this.#latestReceivedDate, parseInt(match.groups.index));
+                const email = await this.#emailDb.getEmail(this.#user, this.#latestReceivedDate, parseInt(match.groups.index));
+                if (!email) {
+                    return this.#makeResponse(`${args[0]}: no such directory`, ERROR);
+                }
+                this.#email = email;
+
             }
-            // TODO check path exists
             this.#workingDir = normalizedPath;
         }
 
