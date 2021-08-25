@@ -27,7 +27,6 @@ ws.onopen = () => {
     term.prompt();
 };
 
-
 ws.onclose = e => {
     connected = false;
 };
