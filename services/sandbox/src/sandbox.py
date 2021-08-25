@@ -23,7 +23,6 @@ def get_docker_container_config(working_directory: str) -> dict[str, Any]:
         "HostConfig": {
             "Memory": 10 * 1024 * 1024,
             "NanoCpus": 100_000_000,
-            "ReadonlyRootfs": True,
             "Mounts": [
                 {
                     "Type": "bind",
