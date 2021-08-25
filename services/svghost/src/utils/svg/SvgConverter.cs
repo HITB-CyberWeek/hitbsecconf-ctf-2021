@@ -191,6 +191,6 @@ namespace svghost.utils.svg
 		}
 
 		private const double MaxDimensionsSize = 1000.0;
-		private const int MaxPdfSize = 1024 * 1024;
+		private const int MaxPdfSize = 512 * 1024;
 	}
 }
