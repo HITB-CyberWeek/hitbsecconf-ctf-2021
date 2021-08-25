@@ -11,7 +11,8 @@ from checker_helper import *
 PORT = 2525
 DOMAIN = 'ctf.hitb.org'
 TIMEOUT = 5
-HTML_TEMPLATE = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"/></head><body><p>%s</p></body></html>'
+HTML_TEMPLATE = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"/></head><body><p>Dear Sir/Madam,<br>I have a confidential message for you: %s<br>Keep it a secret!</p></body></html>'
+TEXT_TEMPLATE = "Dear Sir/Madam,\nI have a confidential message for you: %s\nKeep it a secret!"
 
 class SmtpClient:
     def __init__(self, host):
@@ -47,7 +48,7 @@ class SmtpClient:
         rnd = randint(0, 2)
         if rnd == 0:
             trace("Text part will contain a secret")
-            text = secret
+            text = TEXT_TEMPLATE % secret
             if randint(0, 1) == 0:
                 trace("Adding random HTML part")
                 html = HTML_TEMPLATE % 'See text part'
