@@ -131,6 +131,13 @@ build {
 
   # SVGHOST service
 
+  provisioner "shell-local" {
+    inline = [
+       "cd ../services/svghost/",
+       "./build.sh",
+    ]
+  }
+
   provisioner "file" {
     source = "../services/svghost/out"
     destination = "/home/svghost/"
@@ -188,7 +195,8 @@ build {
       "VBoxManage hostonlyif create",
       "VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1",
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --nic1 hostonly --hostonlyadapter1 vboxnet0",
-      "vboxmanage modifyvm docker.sandbox.2021.ctf.hitb.org --autostart-enabled on",
+      "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --autostart-enabled on",
+      "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --cpus 2",
       "VBoxManage startvm docker.sandbox.2021.ctf.hitb.org --type headless",
 
       "docker-compose up --build -d"
