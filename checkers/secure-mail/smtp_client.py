@@ -11,7 +11,7 @@ from checker_helper import *
 PORT = 2525
 DOMAIN = 'ctf.hitb.org'
 TIMEOUT = 5
-HTML_TEMPLATE = '<html><body><p>%s</p></body></html>'
+HTML_TEMPLATE = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"/></head><body><p>%s</p></body></html>'
 
 class SmtpClient:
     def __init__(self, host):
