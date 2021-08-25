@@ -21,6 +21,8 @@ services:
     links:
       - mongodb
       - clamav
+    volumes:
+      - attachment-volume:/var/haraka/attachments
 
   web:
     image: web
@@ -31,3 +33,8 @@ services:
       - "8080:8080"
     links:
       - mongodb
+    volumes:
+      - attachment-volume:/var/haraka/attachments
+
+volumes:
+  attachment-volume: 

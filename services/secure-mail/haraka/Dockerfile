@@ -14,7 +14,6 @@ ADD ./config/mongodb.ini /usr/local/haraka/config/mongodb.ini
 
 ADD ./plugins/safelinks.js /usr/local/haraka/plugins/safelinks.js
 ADD ./config/safelinks.ini /usr/local/haraka/config/safelinks.ini
-ADD ./docs/plugins/safelinks.md /usr/local/haraka/docs/plugins/safelinks.md
 
 EXPOSE 25
 
