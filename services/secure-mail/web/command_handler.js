@@ -40,7 +40,11 @@ class CommandHandler {
     }
 
     #handleHelpCommand(args) {
-        return this.#makeResponse('HELP');
+        if (!this.#user) {
+            return this.#makeResponse('Available commands:\n- adduser <username> <password>\n- help\n- login <username> <password>');
+        }
+
+        return this.#makeResponse('Available commands:\n- cat <filename>\n- cd <directory>\n- help\n- logout\n- ls');
     }
 
     async #handleAddUserCommand(args) {
@@ -136,12 +140,10 @@ class CommandHandler {
             return this.#makeResponse(`${args[0]}: invalid command arguments`, ERROR);
         }
 
-        const dir = args[1];
-        if (dir == '/') {
+        const normalizedPath = path.normalize(path.join(this.#workingDir, args[1]));
+        if (args[1] == '/' || normalizedPath == '/') {
             this.#workingDir = '/';
         } else {
-            const normalizedPath = path.normalize(path.join(this.#workingDir, dir));
-
             const pathRegex = /^\/(?<index>\d+)\/?$/;
             const match = normalizedPath.match(pathRegex);
             if (!match) {
@@ -172,11 +174,11 @@ class CommandHandler {
         }
 
         if (args[1] == 'html' && this.#email.raw_html) {
-            return this.#makeResponse(convert(this.#email.raw_html, {wordwrap: this.#termCols}).replace(/\n/g, "\r\n"));
+            return this.#makeResponse(convert(this.#email.raw_html.trimEnd(), {wordwrap: this.#termCols}).replace(/\n/g, "\r\n"));
         }
 
         if (args[1] == 'text' && this.#email.raw_text) {
-            return this.#makeResponse(this.#email.raw_text.replace(/\n/g, "\r\n"));
+            return this.#makeResponse(this.#email.raw_text.trimEnd().replace(/\n/g, "\r\n"));
         }
 
         return this.#makeResponse(`${args[0]}: no such file or directory`, ERROR);

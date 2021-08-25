@@ -41,10 +41,11 @@ var needPassword = false;
 ws.onmessage = message => {
     var response = JSON.parse(message.data);
     if (response.output) {
+        const output = response.output.replace(/[\r\n]+/g, "\r\n");
         if (response.exit_code !== 0) {
-            term.write(`\r\n\x1b[1;31m${response.output}\x1b[0m`);
+            term.write(`\r\n\x1b[1;31m${output}\x1b[0m`);
         } else {
-            term.write(`\r\n${response.output}`);
+            term.write(`\r\n${output}`);
         }
     }
     if (cmd.startsWith('login') && !response.exit_code) {
