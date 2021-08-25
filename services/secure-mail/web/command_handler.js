@@ -112,7 +112,7 @@ class CommandHandler {
             if (emails.length) {
                 this.#latestReceivedDate = emails[0].received_date;
             }
-            return this.#makeResponse(emails.map((e, i) => {return `${i.toString()}/: [${e.received_date.toISOString()}] ${e.mail_from.original}: ${e.subject}`}).join('\r\n'));
+            return this.#makeResponse(emails.map((e, i) => {return `${i.toString()}/: [${e.received_date.toISOString()}] ${e.mail_from.original}: ${e.subject}`}).join('\n'));
         }
 
         var files = [];
@@ -128,7 +128,7 @@ class CommandHandler {
             files.push('text');
         }
 
-        return this.#makeResponse(files.join('\r\n'));
+        return this.#makeResponse(files.join('\n'));
     }
 
     async #handleCdCommand(args) {
@@ -174,11 +174,11 @@ class CommandHandler {
         }
 
         if (args[1] == 'html' && this.#email.raw_html) {
-            return this.#makeResponse(convert(this.#email.raw_html.trimEnd(), {wordwrap: this.#termCols}).replace(/\n/g, "\r\n"));
+            return this.#makeResponse(convert(this.#email.raw_html.trimEnd(), {wordwrap: this.#termCols}));
         }
 
         if (args[1] == 'text' && this.#email.raw_text) {
-            return this.#makeResponse(this.#email.raw_text.trimEnd().replace(/\n/g, "\r\n"));
+            return this.#makeResponse(this.#email.raw_text.trimEnd());
         }
 
         return this.#makeResponse(`${args[0]}: no such file or directory`, ERROR);
