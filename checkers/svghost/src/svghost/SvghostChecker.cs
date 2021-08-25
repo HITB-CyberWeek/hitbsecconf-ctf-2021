@@ -56,8 +56,7 @@ namespace checker.svghost
 					return;
 
 				var unique = Guid.NewGuid().ToString();
-				var text = string.Join(" ", new[] {RndText.RandomText(RndUtil.GetInt(0, 64)), unique, RndText.RandomText(RndUtil.GetInt(0, 64))}.Where(s => !string.IsNullOrWhiteSpace(s)));
-				var publicFileId = await PutPublicPdf(client, text).ConfigureAwait(false);
+				var publicFileId = await PutPublicPdf(client, unique).ConfigureAwait(false);
 
 				files.Add((unique, fileId: publicFileId));
 			}

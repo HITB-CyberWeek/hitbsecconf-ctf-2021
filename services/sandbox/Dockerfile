@@ -4,17 +4,16 @@ LABEL maintainer="Andrew Gein <andgein@hackerdom.ru>"
 
 RUN pip install --no-cache-dir "uvicorn[standard]" gunicorn
 
-COPY ./src/requirements.txt /
+COPY src/requirements.txt /
 RUN pip install --no-cache-dir -Ur /requirements.txt
 
-COPY ./src /app
+COPY src /app
 WORKDIR /app/
 
 COPY sandbox_docker_image/sandbox.tar.gz /
-COPY ./certificates /certificates
 COPY ./keys /keys
 
 ENV DOCKER_SANDBOX_IMAGE_PATH=../sandbox.tar.gz
 ENV PYTHONPATH=/app
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-c", "/app/gunicorn_conf.py", "app:app"]
+CMD ["/app/entrypoint.sh"]

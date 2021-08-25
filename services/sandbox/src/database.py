@@ -61,4 +61,5 @@ class ProofOfWorkChallenge(Base):
         return ProofOfWorkChallenge(**data)
 
 
-Base.metadata.create_all(engine)
+if settings.AUTO_MIGRATE_DATABASE:
+    Base.metadata.create_all(engine)

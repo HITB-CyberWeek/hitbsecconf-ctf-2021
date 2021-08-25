@@ -76,7 +76,6 @@ namespace svghost.utils.svg
 			"fill", "stroke"
 		};
 
-		//NOTE: url(resource) is prohibited here
 		private static readonly Regex ColorRegex = new(@"^(?:[a-z]+|#[\da-f]{3}(?:[\da-f]{3})?|(?:rgba?|hsla?)\([^\)]*\))$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 		private static readonly XmlReaderSettings XmlSettings = new()
 		{

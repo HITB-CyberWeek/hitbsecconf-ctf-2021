@@ -1,0 +1,16 @@
+[Unit]
+Description=Restart SANDBOX virtual machine
+After=network.target virtualbox.service
+Before=runlevel2.target shutdown.target
+[Service]
+Type=forking
+Restart=no
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=process
+GuessMainPID=no
+RemainAfterExit=yes
+ExecStart=/usr/bin/VBoxManage startvm docker.sandbox.2021.ctf.hitb.org --type headless
+ExecStop=/usr/bin/VBoxManage controlvm docker.sandbox.2021.ctf.hitb.org acpipowerbutton
+[Install]
+WantedBy=multi-user.target

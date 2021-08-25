@@ -54,4 +54,26 @@ begin
 end
 $$ language plpgsql;
 
+create or replace function cleanup() returns void as $$
+declare
+  p record;
+begin
+  for p in
+    select id, name
+    from projects
+    where
+      ts < now() - interval '30 minutes' and active = false
+  loop
+    begin
+      execute format('drop table data_%s;', p.name);
+      delete from projects where id = p.id;
+    exception when others then
+    end;
+  end loop;
+
+  return;
+end
+$$ language plpgsql;
+
 select cron.schedule('* * * * *', $$ select archive(); $$);
+select cron.schedule('*/5 * * * *', $$ select cleanup(); $$);

@@ -37,13 +37,8 @@ build {
 
   provisioner "shell" {
     inline = [
-      "mkdir ~/certificates/ ~/files"
+      "mkdir ~/files"
     ]
-  }
-
-  provisioner "file" {
-    source = "../certificates/"
-    destination = "~/certificates/"
   }
 
   provisioner "file" {
@@ -59,7 +54,6 @@ build {
   provisioner "shell" {
     inline = [
       "sudo mkdir -p /etc/docker/ssl",
-      "sudo cp ~/certificates/* /etc/docker/ssl/",
 
       "sudo useradd -m -s /bin/bash sandbox",
       "sudo mkdir /home/sandbox/.ssh/",

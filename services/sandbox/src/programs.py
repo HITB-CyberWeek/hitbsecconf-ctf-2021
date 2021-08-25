@@ -44,7 +44,7 @@ MAX_CHALLENGE = 99999
 
 def generate_proof_of_work_challenge() -> int:
     timestamp = int(datetime.now().timestamp())
-    key = timestamp // 10
+    key = timestamp // 60
     if key not in challenges:
         challenges[key] = random.randint(MIN_CHALLENGE, MAX_CHALLENGE)
     return challenges[key]

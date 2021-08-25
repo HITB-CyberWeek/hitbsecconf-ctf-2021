@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -29,23 +30,37 @@ namespace svghost.utils.svg
 				rsvg_handle_get_dimensions(handle, ref dim);
 
 				long total = 0;
-				CairoStatus Write(IntPtr closure, byte[] data, uint length)
+				CairoWriteFunc write = (_, buffer, length) =>
 				{
-					if(data == null || length > (uint)data.Length)
+					if(buffer == IntPtr.Zero || length > MaxPdfSize)
 						return CairoStatus.CAIRO_STATUS_WRITE_ERROR;
-					if(length == 0)
-						return CairoStatus.CAIRO_STATUS_SUCCESS;
-					try { stream.Write(data, 0, (int)length); }
-					catch { return CairoStatus.CAIRO_STATUS_WRITE_ERROR; }
-					total += length;
+
+					var data = ArrayPool<byte>.Shared.Rent((int)length);
+					try
+					{
+						Marshal.Copy(buffer, data, 0, (int) length);
+
+						if(length > (uint)data.Length)
+							return CairoStatus.CAIRO_STATUS_WRITE_ERROR;
+						if(length == 0)
+							return CairoStatus.CAIRO_STATUS_SUCCESS;
+
+						try { stream.Write(data, 0, (int)length); }
+						catch { return CairoStatus.CAIRO_STATUS_WRITE_ERROR; }
+							total += length;
+					}
+					finally
+					{
+						ArrayPool<byte>.Shared.Return(data);
+					}
 
 					return CairoStatus.CAIRO_STATUS_SUCCESS;
-				}
+				};
 
 				if(dim.width > MaxDimensionsSize || dim.height > MaxDimensionsSize)
 					throw new SvgConversionException("Too large svg dimensions");
 
-				var surface = cairo_pdf_surface_create_for_stream(Marshal.GetFunctionPointerForDelegate((CairoWriteFunc)Write), IntPtr.Zero, dim.width, dim.height);
+				var surface = cairo_pdf_surface_create_for_stream(Marshal.GetFunctionPointerForDelegate(write), IntPtr.Zero, dim.width, dim.height);
 				if(cairo_surface_status(surface) != CairoStatus.CAIRO_STATUS_SUCCESS)
 					throw new SvgConversionException("Failed to create cairo surface");
 
@@ -70,6 +85,7 @@ namespace svghost.utils.svg
 					cairo_surface_destroy(surface);
 				}
 
+				GC.KeepAlive(write);
 				return total;
 			}
 			finally
@@ -106,7 +122,7 @@ namespace svghost.utils.svg
 		private static extern void cairo_destroy(IntPtr cairo);
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate CairoStatus CairoWriteFunc(IntPtr closure, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] byte[] data, uint length);
+		private delegate CairoStatus CairoWriteFunc(IntPtr closure, IntPtr data, uint length);
 
 		[DllImport(LibcairoDllName, CallingConvention = CallingConvention.Cdecl)]
 		private static extern IntPtr cairo_pdf_surface_create_for_stream(IntPtr write_func, IntPtr closure, double width, double height);
@@ -126,6 +142,7 @@ namespace svghost.utils.svg
 			public readonly double ex;
 		}
 
+		[Serializable]
 		private enum CairoStatus
 		{
 			CAIRO_STATUS_SUCCESS = 0,
@@ -174,5 +191,6 @@ namespace svghost.utils.svg
 		}
 
 		private const double MaxDimensionsSize = 1000.0;
+		private const int MaxPdfSize = 512 * 1024;
 	}
 }
