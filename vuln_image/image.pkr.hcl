@@ -61,21 +61,30 @@ build {
     ]
   }
 
-  # Copy services
+  ### Copy services
+
+  # FW service
+
   provisioner "file" {
     source = "../services/fw/"
     destination = "/home/fw/"
   }
+
+  # PASSMAN service
 
   provisioner "file" {
     source = "../services/passman/deploy/"
     destination = "/home/passman/"
   }
 
+  # SECURE-MAIL service
+
   provisioner "file" {
     source = "../services/secure-mail/"
     destination = "/home/secure-mail/"
   }
+
+  # SANDBOX service
 
   provisioner "shell" {
     inline = [
@@ -124,6 +133,7 @@ build {
     destination = "/home/sandbox/sandbox_docker_image/"
   }
 
+  # SVGHOST service
 
   provisioner "file" {
     source = "../services/svghost/out"
@@ -145,12 +155,15 @@ build {
     destination = "/home/svghost/"
   }
 
+  # XAR service
+
   provisioner "file" {
     source = "../services/xar/"
     destination = "/home/xar/"
   }
   
   # Build and run services for the first time
+
   provisioner "shell" {
     inline = [
       "cd ~fw",
@@ -169,11 +182,19 @@ build {
     inline = [
       "cd ~sandbox",
       "apt-get -y -q install virtualbox",
+
+      # Enable auto-start for VirtualBox VM. See https://kifarunix.com/autostart-virtualbox-vms-on-system-boot-on-linux/
+      "echo -e 'VBOXAUTOSTART_DB=/etc/vbox\nVBOXAUTOSTART_CONFIG=/etc/vbox/autostartvm.cfg' | tee /etc/default/virtualbox",
+      "echo 'default_policy = allow' | tee /etc/vbox/autostartvm.cfg",
+      "VBoxManage setproperty autostartdbpath /etc/vbox/",
+
       "VBoxManage import sandbox_vm_image/output-sandbox/packer-sandbox-*.ovf --vsys 0 --vmname docker.sandbox.2021.ctf.hitb.org",
       "VBoxManage hostonlyif create",
       "VBoxManage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1",
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --nic1 hostonly --hostonlyadapter1 vboxnet0",
+      "vboxmanage modifyvm docker.sandbox.2021.ctf.hitb.org --autostart-enabled on"
       "VBoxManage startvm docker.sandbox.2021.ctf.hitb.org --type headless",
+
       "docker-compose up --build -d"
     ]
   }
