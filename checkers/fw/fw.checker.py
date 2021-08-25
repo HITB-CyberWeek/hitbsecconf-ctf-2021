@@ -11,6 +11,8 @@ import string
 import sys
 import time
 
+from scapy.all import *
+
 FLAG_PORT = 17777
 FW_PORT = 17778
 SOCKET_TIMEOUT = 3
@@ -140,18 +142,12 @@ def get(ip, id, flag, *args):
 
 def configure_logging(ip):
     log_format = "%(asctime)s %(levelname)-8s %(message)s"
-    if os.getenv("DEBUG") == "1":
-        logging.basicConfig(level=logging.DEBUG, format=log_format)
-    else:
-        os.makedirs(LOGS_DIR, exist_ok=True)
-        log_filename = os.path.join(LOGS_DIR, "{}.log".format(ip))
-        logging.basicConfig(level=logging.DEBUG, format=log_format, filename=log_filename)
+    logging.basicConfig(level=logging.DEBUG, format=log_format, stream=sys.stderr)
 
 
 def main():
     if len(sys.argv) < 3:
         print("Usage: {} (check|put|get) IP".format(sys.argv[0]))
-        print("For console logging, set DEBUG environment variable to 1.")
         sys.exit(ExitCode.INTERNAL_ERROR)
 
     mode = sys.argv[1]
