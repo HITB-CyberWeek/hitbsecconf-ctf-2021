@@ -115,8 +115,12 @@ class CommandHandler {
             return this.#makeResponse(emails.map((e, i) => {return `${i.toString()}/: [${e.received_date.toISOString()}] ${e.mail_from.original}: ${e.subject}`}).join('\n'));
         }
 
+        if (this.#workingDir.includes('/attachments')) {
+            return this.#makeResponse(this.#email.attachments.map((e, i) => {return `${e.filename}`}).join('\n'));
+        }
+
         var files = [];
-        if (this.#email.attachments) {
+        if (this.#email.attachments && this.#email.attachments.length > 0) {
             files.push('attachments/');
         }
 
@@ -143,26 +147,25 @@ class CommandHandler {
         const normalizedPath = path.normalize(path.join(this.#workingDir, args[1]));
         if (args[1] == '/' || normalizedPath == '/') {
             this.#workingDir = '/';
+            this.#email = '';
         } else {
-            const pathRegex = /^\/(?<index>\d+)\/?$/;
-            const match = normalizedPath.match(pathRegex);
+            const emailPathRegex = /^\/(?<index>\d+)(\/attachments\/?)?$/;
+            const match = normalizedPath.match(emailPathRegex);
             if (!match) {
                 return this.#makeResponse(`${args[0]}: no such directory`, ERROR);
             }
 
-            if (match.groups.index) {
-                const email = await this.#emailDb.getEmail(this.#user, this.#latestReceivedDate, parseInt(match.groups.index));
-                if (!email) {
-                    return this.#makeResponse(`${args[0]}: no such directory`, ERROR);
-                }
-                this.#email = email;
-
+            const email = await this.#emailDb.getEmail(this.#user, this.#latestReceivedDate, parseInt(match.groups.index));
+            if (!email) {
+                return this.#makeResponse(`${args[0]}: no such directory`, ERROR);
             }
-            this.#workingDir = normalizedPath;
-        }
 
-        if (this.#workingDir == '/') {
-            this.#email = '';
+            if (normalizedPath.includes('/attachments') && (!this.#email.attachments || !this.#email.attachments.length)) {
+                return this.#makeResponse(`${args[0]}: no such directory`, ERROR);
+            }
+
+            this.#email = email;
+            this.#workingDir = normalizedPath;
         }
 
         return this.#makeResponse();
