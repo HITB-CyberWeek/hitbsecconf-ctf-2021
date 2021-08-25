@@ -21,7 +21,16 @@
         - make
         - libssl-dev
         - python3-pip
+        - sudo
       install_recommends: no
+
+  - name: cs sudo rules
+    copy:
+      content: "{{ cs_user }} ALL = NOPASSWD: {{ cs_dir }}/checkers/fw/fw.checker.py\n"
+      dest: /etc/sudoers.d/cs
+      owner: root
+      group: root
+      mode: 0440
 
   - name: dotnet repo keys
     apt:
@@ -51,3 +60,4 @@
       - xar
       - passman
       - secure-mail
+      - fw
