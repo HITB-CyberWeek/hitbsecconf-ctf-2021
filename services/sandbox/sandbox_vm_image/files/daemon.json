@@ -1,4 +1,4 @@
 {
   "log-driver": "local",
-  "hosts": ["tcp://0.0.0.0:2376"]
+  "hosts": ["tcp://0.0.0.0:2375"]
 }
