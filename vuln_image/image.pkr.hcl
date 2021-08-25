@@ -93,6 +93,13 @@ build {
     ]
   }
 
+  provisioner "shell-local" {
+    inline = [
+       "cd ../services/sandbox/sandbox_docker_image/",
+       "./build_and_export_image.sh",
+    ]
+  }
+
   provisioner "file" {
     source = "../services/sandbox/docker-compose.yaml"
     destination = "/home/sandbox/"
@@ -181,10 +188,17 @@ build {
     ]
   }
 
+  provisioner "file" {
+    source = "../services/sandbox/sandbox_vm_image/sandbox-vm.service"
+    destination = "/etc/systemd/system/sandbox-vm.service"
+  }
+
   provisioner "shell" {
     inline = [
       "cd ~sandbox",
       "apt-get -y -q install virtualbox",
+
+      "systemstl daemon-reload",
 
       # Enable auto-start for VirtualBox VM. See https://kifarunix.com/autostart-virtualbox-vms-on-system-boot-on-linux/
       "mkdir -p /etc/vbox",
@@ -199,7 +213,9 @@ build {
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --nic1 hostonly --hostonlyadapter1 vboxnet0",
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --autostart-enabled on",
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --cpus 2",
-      "VBoxManage startvm docker.sandbox.2021.ctf.hitb.org --type headless",
+
+      "systemctl start sandbox-vm",
+      "systemctl enable sandbox-vm",
 
       "docker-compose up --build -d"
     ]
