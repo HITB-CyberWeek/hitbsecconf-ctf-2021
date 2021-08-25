@@ -27,13 +27,12 @@ class UserDb {
         });
     }
 
-    async create(username, password) {
-        console.log(`create(${username}, ${password})`)
+    async createUser(username, password) {
         const hash = await UserDb.#hashPassword(password);
 
         try {
             const result = await this.#users.insertOne({_id: username, password_hash: hash});
-            return result.insertedCount == 1;
+            return result.acknowledged;
         } catch(e) {
             if (e.code != 11000) {
                 throw(e);
@@ -42,8 +41,11 @@ class UserDb {
         }
     }
 
-    async authenticate(username, password) {
+    async authenticateUser(username, password) {
         const user = await this.#users.findOne({_id : username});
+        if (!user) {
+            return false;
+        }
         return await UserDb.#verifyPassword(password, user.password_hash);
     }
 }
