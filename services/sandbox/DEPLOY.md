@@ -30,7 +30,6 @@ Bring following files and directories to the server:
   - `src/`
   - `sandbox_vm_image/output-sandbox/`
   - `sandbox_docker_image/sandbox.tar.gz`
-  - `certificates/`
   - `keys/`
 
 To run service you should

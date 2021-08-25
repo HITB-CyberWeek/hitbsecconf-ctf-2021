@@ -1,13 +1,14 @@
 version: "3.3"
 services:
   db:
-    image: postgres:13.3
+    image: postgres:13.4
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=sandbox
       - POSTGRES_PASSWORD=dSS7ZtB18BewWD6J
       - POSTGRES_DB=sandbox
+    restart: unless-stopped
 
   server:
     build:
@@ -22,6 +23,8 @@ services:
       - DOCKER_HOST=192.168.56.2
       - DATABASE_URL=postgresql://sandbox:dSS7ZtB18BewWD6J@db:5432/sandbox
       - DATABASE_CONNECTION_OPTIONS={}
+      - AUTO_MIGRATE_DATABASE=False
+    restart: unless-stopped
 
 volumes:
   db-data:

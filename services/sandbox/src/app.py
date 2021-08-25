@@ -45,7 +45,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> database.User
 
 @app.on_event("startup")
 async def startup():
-    # await sandbox.upload_sandbox_docker_image()
+    await sandbox.upload_sandbox_docker_image()
     await database.db.connect()
 
 

@@ -1,26 +1,13 @@
 import asyncio
-import ssl
 from typing import Any
 
 import aiodocker
-import aiohttp
 
 import settings
 
 
-def create_docker_ssl_context() -> ssl.SSLContext:
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-    certs = settings.DOCKER_CERTIFICATES_PATH
-    context.load_verify_locations(cafile=(certs / "ca.pem").as_posix())
-    context.load_cert_chain(
-        certfile=(certs / "docker.pem").as_posix(), keyfile=(certs / "docker.key.pem").as_posix()
-    )
-    return context
-
-
 def create_docker_connection() -> aiodocker.Docker:
-    ssl_context = create_docker_ssl_context()
-    return aiodocker.Docker(url=settings.DOCKER_URL, connector=aiohttp.TCPConnector(ssl=ssl_context))
+    return aiodocker.Docker(url=settings.DOCKER_URL)
 
 
 def get_docker_container_config(working_directory: str) -> dict[str, Any]:
