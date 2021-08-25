@@ -114,15 +114,11 @@ build {
   }
 
   provisioner "file" {
-    source = "../services/sandbox/certificates"
-    destination = "/home/sandbox/"
-  }
-
-  provisioner "file" {
     source = "../services/sandbox/keys"
     destination = "/home/sandbox/"
   }
 
+  # For two following steps you need to run build scripts from ../services/sandbox/sandbox_vm_image and ../services/sandbox/sandbox_docker_image first
   provisioner "file" {
     source = "../services/sandbox/sandbox_vm_image/output-sandbox"
     destination = "/home/sandbox/sandbox_vm_image/"
