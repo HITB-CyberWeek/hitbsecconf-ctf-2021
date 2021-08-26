@@ -203,7 +203,7 @@ build {
       "cd ~sandbox",
       "apt-get -y -q install virtualbox",
 
-      "systemstl daemon-reload",
+      "systemctl daemon-reload",
 
       # Enable auto-start for VirtualBox VM. See https://kifarunix.com/autostart-virtualbox-vms-on-system-boot-on-linux/
       "mkdir -p /etc/vbox",
