@@ -7,7 +7,7 @@ pg_cs_pass: chietaeJoo3b
 pg_cs_db: cs
 pg_cs_host: 10.10.10.9
 pg_cs_port: 5432
-pg_max_connections: 512
+pg_max_connections: 4096
 pg_shared_buffers: 16GB
 pg_work_mem: 16MB
 
