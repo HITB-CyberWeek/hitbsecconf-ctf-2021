@@ -50,5 +50,8 @@ class UserDb:
         cur.execute('SELECT * FROM users WHERE id=?', (user_id,))
         row = cur.fetchone()
         if row is None:
+            trace("User for id '%s' not found" % user_id)
             return None
+
+        trace("Found user for id '%s'" % user_id)
         return User(row[2], row[3])
