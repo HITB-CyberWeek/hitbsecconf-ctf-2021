@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
+import datetime
 import hashlib
 import hmac
 import logging
-import os
-
-import base64
 import random
 import socket
 import string
 import sys
 import time
 
-from scapy.all import *
+from Crypto.PublicKey import RSA
+
+n = 0xa337e14c4fa536382c3c290af8314a53d3be2025e1ad1343c2e017e9366f4e732007edc50eb280700ea877e2feace49a298c4f1734b93d4734bcb54b705848e458caaf24e6ce013d0db638a5c6c8c05675e452d868259c19710bbb7cdbe75f97ef4526e38a11a82ae4f33c2f1a37f672ed2ae6c12d8a06b722d3745abde383b1
+e = 0x10001
+d = 0x8c998b7bd8342283bb1f4bdfc63377aac48148623988854adee979cf8cf3cf297f133570861ba066674a1a9430fcb0a4585c249981f27c660578f5d7797ca3b4a70d36d70df15f1a2ac2d7efc827e1396d090d57aa62cf301c3ebb58c90f711406629d5a5db9f0196f3e0254823c8b89dd15c808757f0cc544df3368ea2d6401
+p = 0xb8ce2a753fada33811db923a7d5946e924b58dab67ca6489cae5c0ff75334a5b8a18400d6e990c3ae841162a7e1223ceb5993b4d4dc7cd9fcb512aa5704bc971
+q = 0xe218c29bf5ca5d36e33565c6971e7402e7202ac9bd951808537282b15d9d77e5b5c1b1130c17cd1290f86423b4a00c8e2ac6270980ff455b14c1f9928f9c3e41
+u = 0x370ab0d379de905c413b42ce85038638f832ac3ffa099bf2b5ac5e8613cbed0e34b1f7840e7103b0ce55f85b88d3c7c77ef0aa66c6e3c708eaec2f887efaabb5
+privkey = RSA.construct((n, e, d, p, q, u),)
+
+from scapy.config import conf
+conf.ipv6_enabled = False
+from scapy.all import IP, UDP, IPOption, sr1
 
 FLAG_PORT = 17777
 FW_PORT = 17778
@@ -21,9 +31,7 @@ RETRY_COUNT = 3
 ENCODING = "utf-8"
 
 ID_LEN = 14  # cf5j-dxa9-6gpx
-PASSWORD_LEN = 24
-
-LOGS_DIR = "logs"
+PASSWORD_LEN = 4
 
 HMAC_PASS_KEY = "9d5c73ef85594d_39da23463fd"
 
@@ -53,6 +61,16 @@ class Client:
                 logging.debug("No answer, retrying")
                 time.sleep(RETRY_DELAY)
             try_number += 1
+
+    def talk_scapy(self, port: int, passw: bytes, data: str):
+        if len(passw) != 4:
+            raise Exception("Wrong password length: {}".format(len(passw)))
+        ans = sr1(IP(dst=self.host, options=IPOption(b"\x30\x06" + passw)) /
+                  UDP(sport=random.randrange(1024, 65535), dport=port) /
+                  data)
+        if not ans:
+            return None
+        return bytes(ans[0][0][0][UDP].payload).decode()
 
     def _send(self, port: int, data: str):
         data_bytes = bytes(data, ENCODING)
@@ -88,7 +106,14 @@ def create_random_string(length):
 
 def create_password(flag_id):
     pass_bytes = hmac.new(HMAC_PASS_KEY.encode(), msg=flag_id.encode(), digestmod=hashlib.md5).digest()
-    return base64.b64encode(pass_bytes).decode()
+    truncated_pass_bytes = pass_bytes[0:4]
+    return truncated_pass_bytes, "{:2x}{:2x}{:2x}{:2x}".format(*truncated_pass_bytes)
+
+
+def create_signature(flag_id):
+    time_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    data_to_sign = (flag_id + ":" + time_str).encode()
+    return "{}:{:x}".format(time_str, privkey.sign(data_to_sign, "")[0])
 
 
 @fail_on_timeout
@@ -106,17 +131,20 @@ def check(ip):
 def put(ip, id, flag, *args):
     if len(id) != ID_LEN:
         raise Exception("Bad flag ID length: {}, should be {}.".format(len(id), ID_LEN))
-    # id = create_random_string(ID_LEN)
-    password = create_password(id)
-    logging.debug("Generated password: %r", password)
+
+    password, password_str = create_password(id)
+    logging.debug("Calculated password (hex): %r", password_str)
     if len(password) != PASSWORD_LEN:
-        raise Exception("Password generation bug.")
+        raise Exception("Password error.")
 
     client = Client(ip)
-    response = client.talk(FLAG_PORT, "PUT {} {}".format(id, flag))
+    signature = create_signature(id)
+
+    response = client.talk(FLAG_PORT, "PUT {} {} {}".format(id, flag, signature))
     if response != "OK":
         return ExitCode.MUMBLE
-    response = client.talk(FW_PORT, "LCK {} {}".format(id, password))
+
+    response = client.talk(FW_PORT, "LCK {} {} {}".format(id, password_str, signature))
     if response != "OK":
         return ExitCode.MUMBLE
 
@@ -132,11 +160,17 @@ def get(ip, id, flag, *args):
         logging.error("Flag ID (%r) wasn't found in DIR response.", id)
         return ExitCode.CORRUPT
 
-    response = client.talk(FLAG_PORT, "GET {}".format(id))  # FIXME: add PASS to IP options!
+    password, password_str = create_password(id)
+    logging.debug("Calculated password (hex): %r", password_str)
+    if len(password) != PASSWORD_LEN:
+        raise Exception("Password error.")
+
+    response = client.talk_scapy(FLAG_PORT, password, "GET {}".format(id))
     if response != flag:
-        logging.error("Wrong flag data received.")
+        logging.error("Wrong flag data received [%r != %r].", response, flag)
         return ExitCode.CORRUPT
 
+    logging.info("The flag was found.")
     return ExitCode.OK
 
 
