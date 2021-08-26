@@ -50,7 +50,7 @@ teams: |
   {name => 'team10', network => '10.60.10.0/24', host => '10.60.10.3', token => '10_test', country => 'RU'},
   {name => 'team11', network => '10.60.11.0/24', host => '10.60.11.3', token => '11_test', country => 'RU'},
   {name => 'team12', network => '10.60.12.0/24', host => '10.60.12.3', token => '12_test', country => 'RU'},
-  {name => 'team13', network => '10.60.13.0/24', host => '10.60.13.3', token => '13_test', country => 'RU'},
+  {name => 'team13_qq', network => '10.60.13.0/24', host => '10.60.13.3', token => '13_test', country => 'RU'},
   {name => 'team14', network => '10.60.14.0/24', host => '10.60.14.3', token => '14_test', country => 'RU'},
   {name => 'team15', network => '10.60.15.0/24', host => '10.60.15.3', token => '15_test', country => 'RU'},
   {name => 'team16', network => '10.60.16.0/24', host => '10.60.16.3', token => '16_test', country => 'RU'},
