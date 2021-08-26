@@ -6,4 +6,4 @@ chmod 755 /home/passman
 chmod 700 /home/passman/data
 
 cd /home/passman
-exec ./passman_server
+exec su -c ./passman_server -s /bin/sh passman
