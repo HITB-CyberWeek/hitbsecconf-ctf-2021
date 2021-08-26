@@ -5,12 +5,7 @@ import sqlite3
 import sys
 import uuid
 from dataclasses import dataclass
-
-def trace(public="", private=""):
-    if public:
-        print(public)
-    if private:
-        print(private, file=sys.stderr)
+from checker_helper import *
 
 @dataclass
 class User:
@@ -48,3 +43,12 @@ class UserDb:
         trace("User for id '%s' created" % user_id)
 
         return User(username, password)
+
+    def read_user(self, host, user_id):
+        trace("Reading user for id '%s'" % user_id)
+        cur = self.connection.cursor()
+        cur.execute('SELECT * FROM users WHERE id=?', (user_id,))
+        row = cur.fetchone()
+        if row is None:
+            return None
+        return User(row[2], row[3])
