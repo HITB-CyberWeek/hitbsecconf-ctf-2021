@@ -150,7 +150,7 @@ namespace checker.svghost
 			await Console.Error.WriteLineAsync($"userId '{me}'").ConfigureAwait(false);
 
 			if(me != userId)
-				throw new CheckerException(ExitCode.MUMBLE, $"auth failed: {ApiMe} uuid mismatch");
+				throw new CheckerException(ExitCode.CORRUPT, $"auth failed: {ApiMe} uuid mismatch");
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
