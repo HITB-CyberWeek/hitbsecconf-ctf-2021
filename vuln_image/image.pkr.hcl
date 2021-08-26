@@ -58,6 +58,8 @@ build {
       "useradd -m -u 10003 -s /bin/bash sandbox",
       "useradd -m -u 10004 -s /bin/bash svghost",
       "useradd -m -u 10005 -s /bin/bash xar",
+
+      "systemctl disable rpcbind.service",
     ]
   }
 

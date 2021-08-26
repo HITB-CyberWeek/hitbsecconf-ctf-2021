@@ -10,7 +10,7 @@ if [ -z $team ]; then
  exit
 fi
 
-teamdump="$(mktemp -d /home/dump/tmp.team${team}_XXXXX)"
+teamdump="$(mktemp -d /mnt/traffic/tmp.team${team}_XXXXX)"
 if [[ $? != 0 ]]; then
     exit 1
 fi
@@ -20,7 +20,7 @@ if [ -z $teamdump ]; then
 fi
 
 
-cd /home/dump/big/
+cd /mnt/traffic/big/
 
 net1="10.$((60 + team / 256)).$((team % 256)).0/24"
 net2="10.$((80 + team / 256)).$((team % 256)).0/24"

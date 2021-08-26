@@ -6,6 +6,8 @@ WORKDIR /ctf
 
 RUN apt-get update && apt-get install -y procps iproute2 clang libc6-dev-i386 llvm
 
+RUN pip install pycrypto
+
 COPY . .
 
 ENTRYPOINT ./entrypoint.sh

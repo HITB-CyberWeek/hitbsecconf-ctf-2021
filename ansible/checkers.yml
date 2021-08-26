@@ -21,6 +21,7 @@
         - make
         - libssl-dev
         - python3-pip
+        - libpython3.9-dev
         - sudo
       install_recommends: no
 
