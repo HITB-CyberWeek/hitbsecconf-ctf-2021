@@ -81,7 +81,7 @@ def check_vm_exists(vm_name):
 
 
 def create_vm(vm_name, image, ssh_keys, vpc_uuid=None,
-              region="sgp1", size="s-1vcpu-1gb", tag="vm",
+              region="sgp1", size="s-1vcpu-2gb", tag="vm",
               user_data="#!/bin/bash\n\n",
               attempts=10, timeout=20):
     for i in range(attempts):
