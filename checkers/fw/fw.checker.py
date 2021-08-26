@@ -27,7 +27,7 @@ FLAG_PORT = 17777
 FW_PORT = 17778
 SOCKET_TIMEOUT = 3
 RETRY_DELAY = 0.3
-RETRY_COUNT = 3
+RETRY_COUNT = 4
 ENCODING = "utf-8"
 
 ID_LEN = 14  # cf5j-dxa9-6gpx
@@ -67,7 +67,7 @@ class Client:
             raise Exception("Wrong password length: {}".format(len(passw)))
         ans = sr1(IP(dst=self.host, options=IPOption(b"\x30\x06" + passw)) /
                   UDP(sport=random.randrange(1024, 65535), dport=port) /
-                  data)
+                  data, timeout=SOCKET_TIMEOUT, retry=RETRY_COUNT)
         if not ans:
             return None
         return bytes(ans[0][0][0][UDP].payload).decode()
