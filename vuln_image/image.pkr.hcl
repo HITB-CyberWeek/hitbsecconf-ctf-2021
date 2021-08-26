@@ -151,7 +151,7 @@ build {
   }
 
   provisioner "file" {
-    source = "../services/svghost/src"
+    source = "../services/svghost/svghost.tar.gz"
     destination = "/home/svghost/"
   }
 
