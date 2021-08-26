@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import os
-import sqlite3
-import sys
 import uuid
+import json
+import base64
 from dataclasses import dataclass
 from checker_helper import *
 
@@ -13,53 +12,14 @@ class User:
     password: str
 
 class UserDb:
-    def __init__(self):
-        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users.db')
-        if not os.path.exists(db_path):
-            trace("SQLite db file '%s' does not exist, creating" % db_path)
-            conn = sqlite3.connect(db_path)
-            cur = conn.cursor()
-            cur.execute('CREATE TABLE users (id VARCHAR PRIMARY KEY NOT NULL, host VARCHAR NOT NULL, username VARCHAR NOT NULL, password VARCHAR NOT NULL, created INT NOT NULL)')
-            conn.commit()
-            conn.close()
-            trace("SQLite db file '%s' created" % db_path)
-        else:
-            conn = sqlite3.connect(db_path)
-            cur = conn.cursor()
-            cur.execute('SELECT count(*) FROM users')
-            row = cur.fetchone()
-            trace("users table has %i records" % row[0])
-            conn.commit()
-            conn.close()
- 
-    def __enter__(self):
-        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users.db')
-        self.connection = sqlite3.connect(db_path)
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.connection.close()
-
     def create_user(self, host, user_id):
         username = str(uuid.uuid4())
         password = str(uuid.uuid4())
-
-        trace("Creating user for id '%s'" % user_id)
-        cur = self.connection.cursor()
-        cur.execute("INSERT INTO users VALUES (?,?,?,?,strftime('%s','now'))", (user_id, host, username, password))
-        self.connection.commit()
-        trace("User for id '%s' created" % user_id)
-
         return User(username, password)
 
-    def read_user(self, host, user_id):
-        trace("Reading user for id '%s'" % user_id)
-        cur = self.connection.cursor()
-        cur.execute('SELECT * FROM users WHERE id=?', (user_id,))
-        row = cur.fetchone()
-        if row is None:
-            trace("User for id '%s' not found" % user_id)
-            return None
-
-        trace("Found user for id '%s'" % user_id)
-        return User(row[2], row[3])
+    def read_user(self, host, flag_id):
+        try:
+            name, password = json.loads(base64.b64decode(flag_id))
+        except Exception as e:
+            verdict(CHECKER_ERROR, "Can't read user from encoded flag_id: %s" % str(e))
+        return User(name, password)

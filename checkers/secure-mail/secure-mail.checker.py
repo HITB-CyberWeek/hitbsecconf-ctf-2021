@@ -4,6 +4,7 @@ import sys
 import uuid
 import traceback
 import asyncio
+import json
 import base64
 import binascii
 from smtp_client import SmtpClient
@@ -22,18 +23,19 @@ async def check(args):
     host = args[0]
     trace("check(%s)" % host)
 
+    db = UserDb()
     smtp_client = SmtpClient(host)
     user_id = str(uuid.uuid4())
 
-    with UserDb() as db:
-        user = db.create_user(host, user_id)
-        async with WebClient(host) as wc:
-            await wc.create_user(user.name, user.password)
-        # TODO send random links
-        smtp_client.send_phishing_message(to=user.name, link='http://example.com')
-        # TODO check result
+    user = db.create_user(host, user_id)
+    async with WebClient(host) as wc:
+        await wc.create_user(user.name, user.password)
 
-    sys.exit(OK)
+    # TODO send random links
+    smtp_client.send_phishing_message(to=user.name, link='http://example.com')
+    # TODO check result
+
+    verdict(OK)
 
 async def put(args):
     if len(args) != 4:
@@ -42,14 +44,15 @@ async def put(args):
     trace("put(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
 
     smtp_client = SmtpClient(host)
+    db = UserDb()
 
-    with UserDb() as db:
-        user = db.create_user(host, flag_id)
-        async with WebClient(host) as wc:
-            await wc.create_user(user.name, user.password)
-        smtp_client.send_secret_message(to=user.name, secret=flag_data)
+    user = db.create_user(host, flag_id)
+    async with WebClient(host) as wc:
+        await wc.create_user(user.name, user.password)
+    smtp_client.send_secret_message(to=user.name, secret=flag_data)
 
-    verdict(OK)
+    flag_id = base64.b64encode(json.dumps([user.name, user.password]).encode()).decode()
+    verdict(OK, flag_id)
 
 async def get(args):
     if len(args) != 4:
@@ -57,63 +60,61 @@ async def get(args):
     host, flag_id, flag_data, vuln = args
     trace("get(%s, %s, %s, %s)" % (host, flag_id, flag_data, vuln))
 
-    with UserDb() as db:
-        user = db.read_user(host, flag_id)
-        if not user:
-            verdict(CHECKER_ERROR, "Checker error", "Can't find user in users.db")
+    db = UserDb()
+    user = db.read_user(host, flag_id)
 
-        async with WebClient(host) as wc:
-            await wc.login(user.name, user.password)
+    async with WebClient(host) as wc:
+        await wc.login(user.name, user.password)
 
-            emails = await wc.list_emails()
-            if len(emails) != 1:
-                verdict(CORRUPT, "Can't find email", "Got %i emails, expected 1" % len(emails))
-            if emails[0].index != 0:
-                verdict(MUMBLE, "Web protocol error: bad data", "Email has unexpected name: %i" % emails[0].index)
+        emails = await wc.list_emails()
+        if len(emails) != 1:
+            verdict(CORRUPT, "Can't find email", "Got %i emails, expected 1" % len(emails))
+        if emails[0].index != 0:
+            verdict(MUMBLE, "Web protocol error: bad data", "Email has unexpected name: %i" % emails[0].index)
 
-            await wc.cd(emails[0].index)
+        await wc.cd(emails[0].index)
 
-            email_items = await wc.list_email_items()
-            if not 'text' in email_items:
-                verdict(MUMBLE, "Web protocol error: bad data", "Email does not contain 'text' part")
+        email_items = await wc.list_email_items()
+        if not 'text' in email_items:
+            verdict(MUMBLE, "Web protocol error: bad data", "Email does not contain 'text' part")
 
-            trace("Reading text part of email")
-            content = await wc.cat('text')
-            if content == 'See attachments':
-                if not 'attachments/' in email_items:
-                    verdict(CORRUPT, "Unexpected email", "Email does not contain attachments part")
+        trace("Reading text part of email")
+        content = await wc.cat('text')
+        if content == 'See attachments':
+            if not 'attachments/' in email_items:
+                verdict(CORRUPT, "Unexpected email", "Email does not contain attachments part")
 
-                trace("Reading attachment part of email")
-                await wc.cd('attachments')
-                attachments = await wc.list_attachments()
-                if len(attachments) != 1:
-                    verdict(CORRUPT, "Unexpected email", "Email contains unexpected number of attachments: %i" % len(attachments))
+            trace("Reading attachment part of email")
+            await wc.cd('attachments')
+            attachments = await wc.list_attachments()
+            if len(attachments) != 1:
+                verdict(CORRUPT, "Unexpected email", "Email contains unexpected number of attachments: %i" % len(attachments))
 
-                if attachments[0] != 'secret':
-                    verdict(CORRUPT, "Unexpected email", "Email contains unexpected attachment name: %s" % attachments[0])
+            if attachments[0] != 'secret':
+                verdict(CORRUPT, "Unexpected email", "Email contains unexpected attachment name: %s" % attachments[0])
 
-                content = await wc.cat('secret')
-                try:
-                    decoded_content = base64.b64decode(content).decode('utf-8')
-                except binascii.Error as e:
-                    verdict(MUMBLE, "Web protocol error: bad data", "Attachment has invalid base64 encoding: %s" % str(e))
-                if str(decoded_content) != flag_data:
-                    verdict(CORRUPT, "Unexpected email", "Email contains unexpected data")
-                else:
-                    sys.exit(OK)
-
-            elif content == 'See HTML part':
-                trace("Reading html part of email")
-                content = await wc.cat('html')
-
-            content_lines = content.splitlines()
-            if len(content_lines) != 3:
-                verdict(CORRUPT, "Unexpected email", "Email contains unexpected number of lines")
-
-            if content_lines[1] != "I have a confidential message for you: %s" % flag_data:
+            content = await wc.cat('secret')
+            try:
+                decoded_content = base64.b64decode(content).decode('utf-8')
+            except binascii.Error as e:
+                verdict(MUMBLE, "Web protocol error: bad data", "Attachment has invalid base64 encoding: %s" % str(e))
+            if str(decoded_content) != flag_data:
                 verdict(CORRUPT, "Unexpected email", "Email contains unexpected data")
+            else:
+                verdict(OK)
 
-    sys.exit(OK)
+        elif content == 'See HTML part':
+            trace("Reading html part of email")
+            content = await wc.cat('html')
+
+        content_lines = content.splitlines()
+        if len(content_lines) != 3:
+            verdict(CORRUPT, "Unexpected email", "Email contains unexpected number of lines")
+
+        if content_lines[1] != "I have a confidential message for you: %s" % flag_data:
+            verdict(CORRUPT, "Unexpected email", "Email contains unexpected data")
+
+    verdict(OK)
 
 def main(args):
     if len(args) == 0:
