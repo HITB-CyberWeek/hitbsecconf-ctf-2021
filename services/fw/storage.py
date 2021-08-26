@@ -3,7 +3,6 @@
 # Feel free to optimize :)
 
 import logging
-import os
 import socket
 
 from common import DB, check_signature
@@ -28,18 +27,21 @@ def main():
 
         response = "???"
         try:
-            a = message.split(" ")
-            if a[0] == "PIN":
+            cmd = message[:3]
+            if cmd == "PIN":
                 response = "PON"
-            elif a[0] == "PUT":
-                if check_signature(a[1], a[3]):
-                    flags.put(key=a[1], value=a[2])
+            elif cmd == "PUT":
+                flag_id = message[4:18]
+                flag_data, signature = message[19:].split(" ")
+                if check_signature(flag_id, signature):
+                    flags.put(key=flag_id, value=flag_data)
                     response = "OK"
                 else:
                     response = "ERR_SIG"
-            elif a[0] == "GET":
-                response = flags.get(key=a[1], default="NO")
-            elif a[0] == "DIR":
+            elif cmd == "GET":
+                flag_id = message[4:18]
+                response = flags.get(key=flag_id, default="NO")
+            elif cmd == "DIR":
                 if flags:
                     response = ",".join(sorted(flags.keys()))
                 else:

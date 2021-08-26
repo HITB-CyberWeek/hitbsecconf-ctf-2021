@@ -7,6 +7,33 @@ from common import DB, check_signature
 
 DATA_DIR = "/data/protector/"
 PORT = 17778
+XDP_TEMPLATE_FILE = "xdp_filter.template.c"
+XDP_RESULT_FILE = "xdp_filter.c"
+XDP_REPLACEMENT = "$RULES$"
+
+
+def generate_xdp_program(rules: DB):
+    with open(XDP_TEMPLATE_FILE) as f:
+        template = f.read()
+
+    rules_program = ""
+    for flag_id in sorted(rules.keys()):
+        passw = rules.get(flag_id)
+        flag_id_condition = " && ".join("udp_data[{}] == '{}'".format(i, c) for i, c in enumerate(flag_id, 4))
+
+        rules_program += """
+        if (%s) {
+            if (ip_hdr->ihl > 5 && ip_options + 4 <= data_end && *(unsigned int *)ip_options == bpf_htonl(0x%s)) {
+                return XDP_PASS; // Password check OK.
+            }
+            return XDP_DROP; // No password or wrong password - access denied.
+        }
+""" % (flag_id_condition, passw)
+    xdp_program = template.replace(XDP_REPLACEMENT, rules_program)
+    with open(XDP_RESULT_FILE, "w") as f:
+        f.write(xdp_program)
+    logging.info("XDP program was generated. %d rules.", len(rules.keys()))
+    return True
 
 
 def build_xdp_program():
@@ -46,7 +73,8 @@ def main():
     sock.bind(("", PORT))
     logging.info("Listening UDP port %d", PORT)
 
-    if not build_xdp_program() or not load_xdp_program():
+    if not generate_xdp_program(rules) or not build_xdp_program() or not load_xdp_program():
+        logging.fatal("Cannot initialize XDP program, terminating.")
         return
 
     while True:
@@ -69,10 +97,12 @@ def main():
                 respond(sock, address, "ERR_SIG")
                 continue
 
+            rules.put(flag_id, passw)
 
+            if not generate_xdp_program(rules):
+                respond(sock, address, "ERR_GEN")
+                continue
 
-
-            # generate_xdp_program()
             if not build_xdp_program():
                 respond(sock, address, "ERR_BUILD")
                 continue

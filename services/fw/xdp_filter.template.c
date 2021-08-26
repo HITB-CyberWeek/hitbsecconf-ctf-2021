@@ -1,5 +1,3 @@
-/* IMPORTANT! This is an example. Real file is auto-generated from template. */
-
 #include <linux/bpf.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
@@ -33,14 +31,7 @@ int  xdp_filter(struct xdp_md *ctx)
     if (udp_data + 18 > data_end) {
         return XDP_DROP; // No flag ID in GET - strange (broken?) packet.
     }
-    if (udp_data[4] == 'x' && udp_data[5] == 'x' && udp_data[6] == 'x' && udp_data[7] == 'x' && udp_data[8] == '-'
-        && udp_data[9] == 'y' && udp_data[10] == 'y' && udp_data[11] == 'y' && udp_data[12] == 'y' && udp_data[13] == '-'
-        && udp_data[14] == 'z' && udp_data[15] == 'z' && udp_data[16] == 'z' && udp_data[17] == 'z') {
-        if (ip_hdr->ihl > 5 && ip_options + 4 <= data_end && *(unsigned int *)ip_options == bpf_htonl(0x11223344)) {
-            return XDP_PASS;
-        }
-        return XDP_DROP;
-    }
+$RULES$
     return XDP_PASS;
 }
 

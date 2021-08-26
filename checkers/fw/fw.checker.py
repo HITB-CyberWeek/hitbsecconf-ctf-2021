@@ -3,6 +3,7 @@ import datetime
 import hashlib
 import hmac
 import logging
+import os
 import random
 import socket
 import string
@@ -65,7 +66,20 @@ class Client:
     def talk_scapy(self, port: int, passw: bytes, data: str):
         if len(passw) != 4:
             raise Exception("Wrong password length: {}".format(len(passw)))
-        ans = sr1(IP(dst=self.host, options=IPOption(b"\x30\x06" + passw)) /
+
+        # For testing purposes.
+        kwargs = dict()
+        if os.environ.get("DEBUG_NO_OPTION") == "1":
+            logging.info("DEBUG: don't send password in IP options")
+            options = None
+        elif os.environ.get("DEBUG_WRONG_PASS") == "1":
+            logging.info("DEBUG: send wrong password in IP options")
+            options = IPOption(b"\x30\x06\x00\x00\x00\x00")
+        else:
+            options = IPOption(b"\x30\x06" + passw)
+        if options is not None:
+            kwargs["options"] = options
+        ans = sr1(IP(dst=self.host, **kwargs) /
                   UDP(sport=random.randrange(1024, 65535), dport=port) /
                   data, timeout=SOCKET_TIMEOUT, retry=RETRY_COUNT)
         if not ans:
