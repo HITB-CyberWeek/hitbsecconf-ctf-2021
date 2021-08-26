@@ -121,7 +121,7 @@ def create_random_string(length):
 def create_password(flag_id):
     pass_bytes = hmac.new(HMAC_PASS_KEY.encode(), msg=flag_id.encode(), digestmod=hashlib.md5).digest()
     truncated_pass_bytes = pass_bytes[0:4]
-    return truncated_pass_bytes, "{:2x}{:2x}{:2x}{:2x}".format(*truncated_pass_bytes)
+    return truncated_pass_bytes, "{:02x}{:02x}{:02x}{:02x}".format(*truncated_pass_bytes)
 
 
 def create_signature(flag_id):
