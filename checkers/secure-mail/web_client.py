@@ -24,7 +24,7 @@ class WebClient:
             self.ws = await asyncio.wait_for(websockets.connect(self.uri), TIMEOUT)
         except asyncio.exceptions.TimeoutError:
             verdict(DOWN, 'Web connection error: timeout', "Web connection error: timeout")
-        except ConnectionRefusedError as e:
+        except (ConnectionRefusedError, OSError) as e:
             verdict(DOWN, 'Web connection error: connection refused', "Web connection error: %s" % str(e))
         return self
 
@@ -37,7 +37,7 @@ class WebClient:
             await asyncio.wait_for(self.ws.send(command), TIMEOUT)
         except asyncio.exceptions.TimeoutError:
             verdict(DOWN, 'Web protocol error: timeout', "Web protocol error (timeout): can't execute '%s' command" % command)
-        except ConnectionRefusedError as e:
+        except (ConnectionRefusedError, OSError) as e:
             verdict(DOWN, 'Web connection error: connection refused', "Web connection error: %s" % str(e))
 
         if have_result:
@@ -46,7 +46,7 @@ class WebClient:
                 result = await asyncio.wait_for(self.ws.recv(), TIMEOUT)
             except asyncio.exceptions.TimeoutError:
                 verdict(DOWN, 'Web protocol error: timeout', "Web protocol error (timeout): can't receive command result")
-            except ConnectionRefusedError as e:
+            except (ConnectionRefusedError, OSError) as e:
                 verdict(DOWN, 'Web connection error: connection refused', "Web connection error: %s" % str(e))
             trace("Command result: %s" % str(result))
 
