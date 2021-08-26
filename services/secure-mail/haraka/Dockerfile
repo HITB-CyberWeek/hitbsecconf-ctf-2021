@@ -3,7 +3,6 @@ FROM node:latest
 RUN npm install -g Haraka
 RUN haraka -i /usr/local/haraka
 
-RUN adduser --home /usr/local/haraka --shell /usr/sbin/nologin --no-create-home --disabled-password --disabled-login smtp
 RUN cd /usr/local/haraka && npm install haraka-plugin-mongodb clamscan cheerio && npm install node-libcurl --build-from-source
 
 ADD ./config/smtp.ini /usr/local/haraka/config/smtp.ini

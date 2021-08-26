@@ -1,5 +1,3 @@
-// safelinks
-
 const { Curl } = require('node-libcurl');
 const NodeClam = require('clamscan');
 const Readable = require('stream').Readable;
@@ -66,9 +64,6 @@ exports.check_link = function (uri) {
         curl.setOpt('FOLLOWLOCATION', true);
 
         curl.on('end', function (statusCode, data, headers) {
-            plugin.loginfo(statusCode);
-            plugin.loginfo(this.getInfo('TOTAL_TIME'));
-
             const rs = Readable();
             rs.push(data);
             rs.push(null);
@@ -139,7 +134,6 @@ exports.hook_data_post = function (next, connection) {
     var links = plugin.extract_links_from_body(txn.body);
 
     Promise.all(links.map(l => plugin.check_link(l))).then(() => {
-        plugin.loginfo('ALL DONE');
         next();
     }).catch(err => {
         plugin.logerror(err);
