@@ -38,13 +38,18 @@ async def run_sandbox_docker_container(working_directory: str) -> str:
     async with create_docker_connection() as docker:
         config = get_docker_container_config(working_directory)
         container = await docker.containers.run(config=config)
+        timed_out = False
         try:
             try:
-                await container.wait(timeout=5)
+                await container.wait(timeout=10)
             except asyncio.TimeoutError:
                 await container.stop()
+                timed_out = True
 
-            return "".join(await container.log(stdout=True, stderr=True))
+            log = "".join(await container.log(stdout=True, stderr=True))
+            if timed_out:
+                log += "\nProgram timed out"
+            return log
         finally:
             await container.delete()
 
