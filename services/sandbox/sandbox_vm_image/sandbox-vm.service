@@ -10,7 +10,11 @@ IgnoreSIGPIPE=no
 KillMode=process
 GuessMainPID=no
 RemainAfterExit=yes
+ExecStartPre=/bin/bash -c "iptables -I FORWARD 1 -d 192.168.56.0/24 -j DROP"
+ExecStartPre=/bin/bash -c "iptables -I FORWARD 1 -s `docker network inspect sandbox_default | grep Subnet | grep -oP '172\.\d+\.\d+\.\d+'`/16 -d 192.168.56.0/24 -j ACCEPT"
 ExecStart=/usr/bin/VBoxManage startvm docker.sandbox.2021.ctf.hitb.org --type headless
 ExecStop=/usr/bin/VBoxManage controlvm docker.sandbox.2021.ctf.hitb.org acpipowerbutton
+ExecStopPost=/bin/bash -c "iptables -D FORWARD -s `docker network inspect sandbox_default | grep Subnet | grep -oP '172\.\d+\.\d+\.\d+'`/16 -d 192.168.56.0/24 -j ACCEPT"
+ExecStopPost=/bin/bash -c "iptables -D FORWARD -d 192.168.56.0/24 -j DROP"
 [Install]
 WantedBy=multi-user.target
