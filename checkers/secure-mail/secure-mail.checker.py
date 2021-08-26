@@ -59,6 +59,9 @@ async def get(args):
 
     with UserDb() as db:
         user = db.read_user(host, flag_id)
+        if not user:
+            verdict(CHECKER_ERROR, "Checker error", "Can't find user in users.db")
+
         async with WebClient(host) as wc:
             await wc.login(user.name, user.password)
 
