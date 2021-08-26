@@ -220,6 +220,7 @@ build {
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --nic1 hostonly --hostonlyadapter1 vboxnet0",
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --autostart-enabled on",
       "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --cpus 2",
+      "VBoxManage modifyvm docker.sandbox.2021.ctf.hitb.org --memory 2048",
 
       "systemctl start sandbox-vm",
       "systemctl enable sandbox-vm",
