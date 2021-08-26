@@ -10,10 +10,10 @@ namespace checker.svghost
 {
 	internal static class RndSvg
 	{
-		public static string Generate(string flag)
+		public static string Generate(string flag, out int width, out int height)
 		{
-			var width = RndUtil.GetInt(200, 999);
-			var height = RndUtil.GetInt(200, 999);
+			width = RndUtil.GetInt(200, 999);
+			height = RndUtil.GetInt(200, 999);
 
 			var stream = new MemoryStream();
 			using var writer = XmlWriter.Create(stream, new XmlWriterSettings

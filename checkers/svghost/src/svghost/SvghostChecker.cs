@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using checker.net;
 using checker.rnd;
 using checker.utils;
+using iTextSharp.text;
 
 namespace checker.svghost
 {
@@ -49,24 +50,24 @@ namespace checker.svghost
 
 			await Console.Error.WriteLineAsync($"userId '{userId}'").ConfigureAwait(false);
 
-			var files = new List<(string unique, Guid fileId)>();
+			var files = new List<(string unique, Guid fileId, int width, int height)>();
 			async Task PutPublicFileIfRnd(AsyncHttpClient client)
 			{
 				if(RndUtil.GetInt(0, 9) != 0)
 					return;
 
 				var unique = Guid.NewGuid().ToString();
-				var publicFileId = await PutPublicPdf(client, unique).ConfigureAwait(false);
+				var result = await PutPublicPdf(client, unique).ConfigureAwait(false);
 
-				files.Add((unique, fileId: publicFileId));
+				files.Add((unique, result.fileId, result.width, result.height));
 			}
 
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 			await PutPublicFileIfRnd(client).ConfigureAwait(false);
 			await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
 
-			var svg = RndSvg.Generate(flag);
-			await Console.Error.WriteLineAsync($"private svg '{SvgToLog(svg)}'").ConfigureAwait(false);
+			var svg = RndSvg.Generate(flag, out var width, out var height);
+			await Console.Error.WriteLineAsync($"private svg: size '{width}x{height}' raw '{SvgToLog(svg)}'").ConfigureAwait(false);
 
 			var data = $"data={WebUtility.UrlEncode(svg)}&isPrivate=true";
 			result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}}, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
@@ -77,7 +78,7 @@ namespace checker.svghost
 				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiSvg} response: uuid expected");
 
 			var cookie = client.Cookies?.GetCookieHeader(GetBaseUri(host));
-			await Console.Error.WriteLineAsync($"cookie '{(cookie?.Length > MaxCookieSize ? cookie.Substring(0, MaxCookieSize) + "..." : cookie)}' with length '{cookie?.Length ?? 0}'").ConfigureAwait(false);
+			await Console.Error.WriteLineAsync($"cookie '{Shorten(cookie, MaxCookieSize)}' with length '{cookie?.Length ?? 0}'").ConfigureAwait(false);
 
 			if(cookie == null || cookie.Length > MaxCookieSize)
 				throw new CheckerException(ExitCode.MUMBLE, "too large or invalid cookies");
@@ -117,10 +118,10 @@ namespace checker.svghost
 			if(found == null)
 				throw new CheckerException(ExitCode.MUMBLE, $"posted svg not found in {ApiList} response");
 
-			foreach(var publicFileId in files)
+			foreach(var file in files)
 			{
 				await RndUtil.RndDelay(MaxDelay).ConfigureAwait(false);
-				await CheckPublicPdfContainsText(client, userId, publicFileId.fileId, publicFileId.unique).ConfigureAwait(false);
+				await CheckPublicPdfContainsText(client, userId, file.fileId, file.unique, file.width, file.height).ConfigureAwait(false);
 			}
 
 			return $"{userId}:{fileId}:{Convert.ToBase64String(bytes)}";
@@ -164,7 +165,9 @@ namespace checker.svghost
 			if(!(result.Body?.Length > PdfSign.Length) || Encoding.ASCII.GetString(result.Body.GetBuffer(), 0, PdfSign.Length) != PdfSign)
 				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: pdf expected");
 
-			var parsed = DoIt.TryOrDefault(() => PdfUtils.PdfFirstPage2Text(result.Body, MaxPdfTextSize));
+			Rectangle rect = null;
+			var parsed = DoIt.TryOrDefault(() => PdfUtils.OnePagePdf2Text(result.Body, MaxPdfTextSize, out rect));
+			await Console.Error.WriteLineAsync($"got private pdf: size '{rect}' text '{Shorten(parsed)}' with length '{parsed?.Length ?? 0}'").ConfigureAwait(false);
 			if(parsed == null || !parsed.Contains(flag))
 				throw new CheckerException(ExitCode.CORRUPT, $"invalid {ApiPdf} response: flag not found");
 
@@ -181,10 +184,10 @@ namespace checker.svghost
 				throw new CheckerException(ExitCode.CORRUPT, $"invalid {ApiSvg} response: flag not found");
 		}
 
-		private static async Task<Guid> PutPublicPdf(AsyncHttpClient client, string text)
+		private static async Task<(Guid fileId, int width, int height)> PutPublicPdf(AsyncHttpClient client, string text)
 		{
-			var svg = RndSvg.Generate(text);
-			await Console.Error.WriteLineAsync($"public svg '{SvgToLog(svg)}'").ConfigureAwait(false);
+			var svg = RndSvg.Generate(text, out var width, out var height);
+			await Console.Error.WriteLineAsync($"public svg: size '{width}x{height}' raw '{SvgToLog(svg)}'").ConfigureAwait(false);
 
 			var data = $"data={WebUtility.UrlEncode(svg)}&isPrivate=false";
 			var result = await client.DoRequestAsync(HttpMethod.Post, ApiSvg, new Dictionary<string, string> {{"Content-Type", "application/x-www-form-urlencoded"}}, Encoding.UTF8.GetBytes(data), NetworkOpTimeout).ConfigureAwait(false);
@@ -194,10 +197,10 @@ namespace checker.svghost
 			if(!Guid.TryParseExact(result.BodyAsString, "D", out var fileId) || fileId == default)
 				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiSvg} response: uuid expected");
 
-			return fileId;
+			return (fileId, width, height);
 		}
 
-		private static async Task CheckPublicPdfContainsText(AsyncHttpClient client, Guid userId, Guid fileId, string text)
+		private static async Task CheckPublicPdfContainsText(AsyncHttpClient client, Guid userId, Guid fileId, string text, int width, int height)
 		{
 			var query = $"?userId={userId}&fileId={fileId}&isPrivate=false";
 			var result = await client.DoRequestAsync(HttpMethod.Get, ApiPdf + query, null, null, NetworkOpTimeout, MaxHttpBodySize).ConfigureAwait(false);
@@ -207,18 +210,24 @@ namespace checker.svghost
 			if(!(result.Body?.Length > PdfSign.Length) || Encoding.ASCII.GetString(result.Body.GetBuffer(), 0, PdfSign.Length) != PdfSign)
 				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: pdf expected");
 
-			var parsed = DoIt.TryOrDefault(() => PdfUtils.PdfFirstPage2Text(result.Body, MaxPdfTextSize));
-			if(parsed == null || !parsed.Contains(text))
-				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: invalid pdf");
+			Rectangle rect = null;
+			var parsed = DoIt.TryOrDefault(() => PdfUtils.OnePagePdf2Text(result.Body, MaxPdfTextSize, out rect));
+			await Console.Error.WriteLineAsync($"got public pdf: size '{rect}' text '{Shorten(parsed)}' with length '{parsed?.Length ?? 0}'").ConfigureAwait(false);
+			if(parsed == null || !parsed.Contains(text) || Math.Abs(width - (rect?.Width ?? 0.0f)) > 1.0f || Math.Abs(height - (rect?.Height ?? 0.0f)) > 1.0f)
+				throw new CheckerException(ExitCode.MUMBLE, $"invalid {ApiPdf} response: incorrect pdf render");
 		}
 
+		private static string Shorten(string text, int maxLength = MaxTextSizeToLog)
+			=> text?.Length > maxLength ? text.Substring(0, maxLength) + "..." : text;
+
 		private static string SvgToLog(string svg)
-			=> svg.Length > 256 ? svg.Substring(0, 256).Replace('\r', ' ').Replace('\n', ' ') + "..." : svg.Replace('\r', ' ').Replace('\n', ' ');
+			=> Shorten(svg)?.Replace('\r', ' ').Replace('\n', ' ');
 
 		private const int Port = 5073;
 
 		private const int MaxHttpBodySize = 512 * 1024;
 		private const int MaxCookieSize = 1024;
+		private const int MaxTextSizeToLog = 512;
 
 		private const int MaxDelay = 1000;
 		private const int MaxDelayBeforeList = 8000;

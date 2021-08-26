@@ -25,12 +25,15 @@ namespace checker
 				if(error != null)
 				{
 					if(error.StdOut != null)
-						Console.Out.WriteLine(error.StdOut);
+					{
+						await Console.Error.WriteLineAsync(error.StdOut).ConfigureAwait(false);
+						await Console.Out.WriteLineAsync(error.StdOut).ConfigureAwait(false);
+					}
 
 					return (int)error.ExitCode;
 				}
 
-				Console.Error.WriteLine(e);
+				await Console.Error.WriteLineAsync(e.ToString()).ConfigureAwait(false);
 				return (int)ExitCode.CHECKER_ERROR;
 			}
 		}
@@ -81,7 +84,7 @@ namespace checker
 				}
 				catch(CheckerException e)
 				{
-					await Console.Error.WriteLineAsync(e.ExitCode.ToString()).ConfigureAwait(false);
+					await Console.Error.WriteLineAsync($"{e.ExitCode} {e.StdOut}").ConfigureAwait(false);
 					return;
 				}
 			}
