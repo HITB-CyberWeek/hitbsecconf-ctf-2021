@@ -23,7 +23,15 @@ class UserDb:
             conn.commit()
             conn.close()
             trace("SQLite db file '%s' created" % db_path)
-
+        else:
+            conn = sqlite3.connect(db_path)
+            cur = conn.cursor()
+            cur.execute('SELECT count(*) FROM users')
+            row = cur.fetchone()
+            trace("users table has %i records" % row[0])
+            conn.commit()
+            conn.close()
+ 
     def __enter__(self):
         db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users.db')
         self.connection = sqlite3.connect(db_path)
