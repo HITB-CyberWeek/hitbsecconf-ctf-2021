@@ -151,6 +151,11 @@ build {
   }
 
   provisioner "file" {
+    source = "../services/svghost/src"
+    destination = "/home/svghost/"
+  }
+
+  provisioner "file" {
     source = "../services/svghost/docker-compose.yml"
     destination = "/home/svghost/"
   }
