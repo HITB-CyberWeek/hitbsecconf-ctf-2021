@@ -6,11 +6,11 @@ Service Sandbox provides a very simple functionality: it allows to run a small C
 
 Service has HTTP API which can be observed on http://<IP>:8000/docs:
 
-images/swagger.png
+![Swagger for Sandbox service](images/swagger.png)
 
 Endpoints `/users` and `/login` are intuitive.
 
-Endpoints `/programs` allows to upload a C program and list available programs available for running.
+Endpoints `/programs` allow to upload a C program and list available programs available for running.
 
 Running a program is CPU bound task so you we need to protect the service from the flood. It's the reason why proof-of-work has been added to the service.
 First, you need to send POST request to `/programs/{program_id}/challenge`, receive challenge and solve it (it takes ~60 seconds in one core).
@@ -25,7 +25,7 @@ Service has three parts, which can be found at `/home/sandbox` of the vulnerable
 
 First part is Python application located in `src` subfolder.
 Second part is VirtualBox machine, created from the image located in `sandbox_vm_image` subfolder. VirtualBox machine doesn't have internet connection, only python application can connect to it (
-to 22/tcp — SSH, and to 2375/tcp — Docker)
+to 22/tcp — SSH, and to 2375/tcp — Docker)
 And third part is Docker image located in `sandbox_docker_image`. Containers created from this image are running inside of VirtualBox machine.
 You can investigate internals of Docker image, because it's just a .tar.gz archive.
 
@@ -40,7 +40,7 @@ host file system, run some code in privileged mode and so on... It's a big secur
 We have only two problems.
 
 1. We need to connect to the Docker socket from C program without any libraries installed. Fortunately, Docker socket has HTTP API. Example of program connecting to this API and creating some containers
-could be found at [../sploits/sandbox/program_template.c](sploits folder). Some piece of code from there:
+could be found at [sploit folder](../sploits/sandbox/program_template.c). Some piece of code from there:
 
 ```(c)
 void create_hacking_container() {
@@ -111,19 +111,19 @@ string sha256(const string& str) {
 }
 
 int main() {
-	... // read the prefix
+    ... // read the prefix
 
-	for (unsigned int suffix = 0; ; suffix++) {
-    	char buffer[17];
-	    sprintf(buffer, "%08x%08x", prefix, suffix);
-    	string result = sha256(buffer);
-	    if (result.substr(0, 6) == "000000") {
-    	    cout << prefix << " " << suffix << " " << buffer << " " << result << endl;
-	        break;
-    	}
-	}
+    for (unsigned int suffix = 0; ; suffix++) {
+        char buffer[17];
+        sprintf(buffer, "%08x%08x", prefix, suffix);
+        string result = sha256(buffer);
+        if (result.substr(0, 6) == "000000") {
+            cout << prefix << " " << suffix << " " << buffer << " " << result << endl;
+            break;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 ```
 
