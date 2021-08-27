@@ -1,3 +1,6 @@
+#!/bin/bash
+# Requirements: bbe, jq, pdftotext, curl
+
 host=$1
 port=5073
 
