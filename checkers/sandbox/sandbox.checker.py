@@ -23,10 +23,10 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
         print('vulns: 1')
         self.exit(checklib.StatusCode.OK)
 
-    def check(self, address):
+    def check(self, address: str):
         self._check_main_page()
 
-    def put(self, address, flag_id, flag, vuln):
+    def put(self, address: str, flag_id: str, flag: str, _vuln: str):
         username = checklib.random.string(string.ascii_lowercase, 10)
         password = checklib.random.string(string.ascii_lowercase, 10)
         self._register_user(username, password)
@@ -42,7 +42,7 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
             "program_id": program_id,
         }))
 
-    def get(self, address, flag_id, flag, vuln):
+    def get(self, address: str, flag_id: str, flag: str, _vuln: str):
         data = json.loads(flag_id)
         username = data["username"]
         password = data["password"]
@@ -83,7 +83,7 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
             "Not found 'Welcome to the Sandbox API'"
         )
 
-    def _register_user(self, username, password):
+    def _register_user(self, username: str, password: str) -> int:
         logging.info('Try to register a user %r with password %r' % (username, password))
         r = self.try_http_post("/users", json={
             "username": username,
@@ -94,7 +94,7 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
         logging.info('Success. User id is %d' % (user_id, ))
         return user_id
 
-    def _login(self, username, password):
+    def _login(self, username: str, password: str):
         logging.info('Try to login as "%s" with password "%s"' % (username, password))
         r = self.try_http_post("/login", data={
             "username": username,
@@ -109,7 +109,7 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
         template = (pathlib.Path(__file__).parent / "template.c").read_text()
         return template.replace("%FLAG%", flag)
 
-    def _upload_program(self, program_code):
+    def _upload_program(self, program_code: str) -> int:
         logging.info('Try to upload a program')
         r = self.try_http_post("/programs", json={
             "code": program_code,
@@ -122,7 +122,7 @@ class SandboxChecker(checklib.http.HttpJsonChecker):
         logging.info("Success. Program id is %d" % (program_id, ))
         return program_id
 
-    def _run_program(self, program_id: int, stdin: str, challenge_id: int, challenge_response: str):
+    def _run_program(self, program_id: int, stdin: str, challenge_id: int, challenge_response: str) -> str:
         logging.info('Try to run a program %d with stdin %r' % (program_id, stdin))
         r = self.try_http_post("/programs/%d/run" % (program_id, ), json={
             "input": stdin,
