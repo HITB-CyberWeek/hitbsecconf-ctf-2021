@@ -19,7 +19,7 @@ Also, we bring to you some of our internal infrastructure magic:
 
 Final scoreboard:
 
-<img src="static/scoreboard.png" alt="Final scoreboard">
+<a href="static/scoreboard.png"><img src="static/scoreboard-truncated.png" alt="Final scoreboard"></a>
 
 # First bloods
 
