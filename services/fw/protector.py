@@ -143,6 +143,7 @@ def main():
                 if cmd == "LCK":
                     respond(sock, address, "ERR_LOAD")
                     continue
+                # Emergency mode
                 unload_xdp_program()
                 if not load_xdp_program():
                     respond(sock, address, "ERR_LOAD")
