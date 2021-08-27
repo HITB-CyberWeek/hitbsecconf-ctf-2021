@@ -154,11 +154,11 @@ def put(ip, id, flag, *args):
     client = Client(ip)
     signature = create_signature(id)
 
-    response = client.talk(FLAG_PORT, "PUT {} {} {}".format(id, flag, signature))
+    response = client.talk(FW_PORT, "LCK {} {} {}".format(id, password_str, signature))
     if response != "OK":
         return ExitCode.MUMBLE
 
-    response = client.talk(FW_PORT, "LCK {} {} {}".format(id, password_str, signature))
+    response = client.talk(FLAG_PORT, "PUT {} {} {}".format(id, flag, signature))
     if response != "OK":
         return ExitCode.MUMBLE
 
