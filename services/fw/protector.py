@@ -64,12 +64,11 @@ def retry_decorator(count: int):
                     return False
                 logging.warning("Call has failed. Retrying in %.1f sec..", sleep_time)
                 time.sleep(sleep_time)
-                sleep_time *= 2
         return wrapper
     return decorator
 
 
-@retry_decorator(count=5)
+# @retry_decorator(count=3)
 def load_xdp_program():
     logging.info("Loading XDP program...")
     try:

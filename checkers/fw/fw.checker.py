@@ -154,9 +154,16 @@ def put(ip, id, flag, *args):
     client = Client(ip)
     signature = create_signature(id)
 
-    response = client.talk(FW_PORT, "LCK {} {} {}".format(id, password_str, signature))
-    if response != "OK":
-        return ExitCode.MUMBLE
+    i = 1
+    max_tries = 4
+    while True:
+        response = client.talk(FW_PORT, "LCK {} {} {}".format(id, password_str, signature))
+        if response == "OK":
+            break
+        elif i >= max_tries:
+            return ExitCode.MUMBLE
+        time.sleep(5)
+        i += 1
 
     response = client.talk(FLAG_PORT, "PUT {} {} {}".format(id, flag, signature))
     if response != "OK":
