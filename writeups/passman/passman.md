@@ -74,7 +74,7 @@ msg_length  msg_type  offset_len   offset   password_description_len   password_
 
 In the process of handling the data, the 0x21 bytes beyond the buffer will be set as teh password and can be get by the *get_password* call. So the state can be restored and the next challenge answers can be predicted.
 
-The full sploit can be found at [/sploits/passman/sploit.py](../sploits/passman/sploit.py).
+The full sploit can be found at [/sploits/passman/sploit.py](../../sploits/passman/sploit.py).
 
 
 **The fix.** To fix the vuln the additional length check should be added. Also, the random numbers generation method can be modified.
