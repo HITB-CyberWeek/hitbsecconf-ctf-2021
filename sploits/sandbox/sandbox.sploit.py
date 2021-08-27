@@ -87,15 +87,15 @@ class SandboxExploit(HttpExploit):
 
         output = ''
         while not re.findall(flag_re, output):
+            logging.info("Waiting for flags... Sleep for 20 second")
+            time.sleep(20)
+
             challenge_id, challenge_prefix = self._get_proof_of_work_challenge(program_id)
             challenge_response = challenge_responses[challenge_prefix]
             output = self._run_program(program_id, "", challenge_id, challenge_response)
 
-            logging.info("Waiting for flags... Sleep for 5 second")
-            time.sleep(5)
-
         print("Found flags!")
-        print(re.findall(flag_re, output))
+        print(set(re.findall(flag_re, output)))
 
     def _register_user(self, username: str, password: str) -> int:
         logging.info('Try to register a user %r with password %r' % (username, password))

