@@ -16,13 +16,13 @@ The first byte of data is a message type. After the message type, the arguments 
 
 The message types and their arguments are:
 
-**type 0**: *user_name(n)*, returns the name of n-th recently registered user, the answer has type 1 and contains the name, if there was an error type 255 is returned
-**type 1**: *register(login, password)*, registers a user. The answer has type 0 on success and type 255 on failure
-**type 2**: *start_login(login)*, start the login proccess. The answer has type 3 and contains the challenge encrypted with the user password
-**type 4**: *continue_login(challenge_response)*, answer the challenge and log in. The answer has type 0, if sucessful or type 255 on failure
-**type 5**: *put_password(offset, password_description, password)*, stores the password. An offset is a number from 0 to 7. Passwords are never overwritten. The answer has type 0 if successful or type 255 on failure
-**type 6**: *get_password_description(offset)*, gets the password description by offset. The zeroth offset always contains the current user login. The answer has type 7 or 255, if error
-**type 8**: *get_password(offset)*, gets the password by offset. The zeroth offset always contains the current user password. The answer has type 8 or 255
+* **type 0**: *user_name(n)*, returns the name of n-th recently registered user, the answer has type 1 and contains the name, if there was an error type 255 is returned
+* **type 1**: *register(login, password)*, registers a user. The answer has type 0 on success and type 255 on failure
+* **type 2**: *start_login(login)*, start the login proccess. The answer has type 3 and contains the challenge encrypted with the user password
+* **type 4**: *continue_login(challenge_response)*, answer the challenge and log in. The answer has type 0, if sucessful or type 255 on failure
+* **type 5**: *put_password(offset, password_description, password)*, stores the password. An offset is a number from 0 to 7. Passwords are never overwritten. The answer has type 0 if successful or type 255 on failure
+* **type 6**: *get_password_description(offset)*, gets the password description by offset. The zeroth offset always contains the current user login. The answer has type 7 or 255, if error
+* **type 8**: *get_password(offset)*, gets the password by offset. The zeroth offset always contains the current user password. The answer has type 8 or 255
 
 ### Example of Data Exchange
 
