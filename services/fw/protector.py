@@ -11,7 +11,7 @@ PORT = 17778
 XDP_TEMPLATE_FILE = "xdp_filter.template.c"
 XDP_RESULT_FILE = "xdp_filter.c"
 XDP_REPLACEMENT = "$RULES$"
-RULES_MAX_COUNT = 25
+RULES_MAX_COUNT = 50
 
 
 def generate_xdp_program(rules: DB):
