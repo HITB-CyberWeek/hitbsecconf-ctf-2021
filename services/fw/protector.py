@@ -82,6 +82,18 @@ def load_xdp_program():
     return True
 
 
+def unload_xdp_program():
+    logging.warning("Unloading XDP program")
+    try:
+        subprocess.check_call("./xdp_loader -d eth0 --filename xdp_filter.o --progsec xdp_main --unload",
+                              shell=True, timeout=10)
+    except subprocess.SubprocessError:
+        logging.exception("Error unloading XDP program.")
+        return False
+    logging.info("XDP program was unloaded.")
+    return True
+
+
 def respond(sock, address, message):
     logging.info("Sending response: %r to %s", message, address)
     sock.sendto(bytes(message, "utf-8"), address)
