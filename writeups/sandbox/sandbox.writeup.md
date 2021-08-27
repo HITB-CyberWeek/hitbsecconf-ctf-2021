@@ -4,7 +4,7 @@
 
 Service Sandbox provides a very simple functionality: it allows to run a small C program with passed input and get it's output.
 
-Service has HTTP API which can be observed on http://<IP>:8000/docs:
+Service has HTTP API which can be observed on `http://<IP>:8000/docs`:
 
 ![Swagger for Sandbox service](images/swagger.png)
 
