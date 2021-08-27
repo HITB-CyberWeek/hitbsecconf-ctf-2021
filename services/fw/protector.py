@@ -122,7 +122,7 @@ def main():
                 continue
 
             cmd, flag_id, passw, signature = tokens
-            if cmd != "LCK":
+            if cmd != "LCK" and cmd != "LC2":
                 respond(sock, address, "ERR_CMD")
                 continue
 
@@ -139,11 +139,14 @@ def main():
             if not build_xdp_program():
                 respond(sock, address, "ERR_BUILD")
                 continue
-            # if not load_xdp_program(): # In case of emergency - break glass :)
-            #     unload_xdp_program()
             if not load_xdp_program():
-                respond(sock, address, "ERR_LOAD")
-                continue
+                if cmd == "LCK":
+                    respond(sock, address, "ERR_LOAD")
+                    continue
+                unload_xdp_program()
+                if not load_xdp_program():
+                    respond(sock, address, "ERR_LOAD")
+                    continue
             respond(sock, address, "OK")
         except Exception:
             logging.exception("Error")
