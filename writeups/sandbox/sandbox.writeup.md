@@ -40,7 +40,7 @@ host file system, run some code in privileged mode and so on... It's a big secur
 We have only two problems.
 
 1. We need to connect to the Docker socket from C program without any libraries installed. Fortunately, Docker socket has HTTP API. Example of program connecting to this API and creating some containers
-could be found at [sploit folder](../sploits/sandbox/program_template.c). Some piece of code from there:
+could be found at [sploit folder](../../sploits/sandbox/program_template.c). Some piece of code from there:
 
 ```(c)
 void create_hacking_container() {
@@ -128,3 +128,6 @@ int main() {
 ```
 
 
+
+
+Full exploit can be found at [sploits/sandbox](../../sploits/sandbox).
