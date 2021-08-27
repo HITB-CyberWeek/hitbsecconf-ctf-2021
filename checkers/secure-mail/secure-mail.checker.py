@@ -35,7 +35,6 @@ async def check(args):
         await wc.create_user(user.name, user.password)
 
     link, name = LinkGenerator().get_random_link()
-    print(link)
     smtp_client.send_phishing_message(to=user.name, link=link)
     time.sleep(3)
 
