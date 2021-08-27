@@ -10,7 +10,7 @@ from common import DB, check_signature
 DATA_DIR = "/data/storage/"
 PORT = 17777
 MAX_SIZE = 64
-ITEMS_MAX_COUNT = 50
+ITEMS_MAX_COUNT = 30
 
 
 def main():
