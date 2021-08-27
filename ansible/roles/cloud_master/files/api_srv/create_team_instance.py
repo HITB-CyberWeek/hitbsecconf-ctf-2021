@@ -23,7 +23,7 @@ DNS_NAME = IMAGE_VM_NAME
 
 # ROUTER_DO_IMAGE = 75325182
 ROUTER_DO_IMAGE = 89427587
-VULNIMAGE_DO_IMAGE = 89737322
+VULNIMAGE_DO_IMAGE = 90628729
 # DO_SSH_KEYS = [435386, 29222150]
 DO_SSH_KEYS = [27173548, 31096679]
 
@@ -240,7 +240,7 @@ def main():
 
                 vulnimage_droplet_id = do_api.create_vm(
                     IMAGE_VM_NAME, image=VULNIMAGE_DO_IMAGE, ssh_keys=DO_SSH_KEYS,
-                    user_data=userdata, vpc_uuid=vpc_id, tag="team-image", size="s-4vcpu-8gb")
+                    user_data=userdata, vpc_uuid=vpc_id, tag="team-image", size="s-8vcpu-16gb")
                 if vulnimage_droplet_id is None:
                     log_stderr("failed to create vm, exiting")
                     return 1
