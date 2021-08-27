@@ -84,7 +84,11 @@ class Client:
                   data, timeout=SOCKET_TIMEOUT, retry=RETRY_COUNT)
         if not ans:
             return None
-        return bytes(ans[0][0][0][UDP].payload).decode()
+        try:
+            return bytes(ans[0][0][0][UDP].payload).decode()
+        except IndexError as e:
+            logging.error(str(e))
+            return None
 
     def _send(self, port: int, data: str):
         data_bytes = bytes(data, ENCODING)
@@ -138,6 +142,7 @@ def check(ip):
     if response == "PON":
         return ExitCode.OK
 
+    print("PIN has failed.")  # Visible to team
     return ExitCode.MUMBLE
 
 
@@ -161,12 +166,14 @@ def put(ip, id, flag, *args):
         if response == "OK":
             break
         elif i >= max_tries:
+            print("LCK has failed.")  # Visible to team
             return ExitCode.MUMBLE
         time.sleep(5)
         i += 1
 
     response = client.talk(FLAG_PORT, "PUT {} {} {}".format(id, flag, signature))
     if response != "OK":
+        print("PUT has failed.")  # Visible to team
         return ExitCode.MUMBLE
 
     return ExitCode.OK
@@ -178,6 +185,7 @@ def get(ip, id, flag, *args):
 
     response = client.talk(FLAG_PORT, "DIR")
     if id not in response:
+        print("Flag ID not found in DIR response.")  # Visible to team
         logging.error("Flag ID (%r) wasn't found in DIR response.", id)
         return ExitCode.CORRUPT
 
@@ -188,6 +196,7 @@ def get(ip, id, flag, *args):
 
     response = client.talk_scapy(FLAG_PORT, password, "GET {}".format(id))
     if response != flag:
+        print("Wrong flag data received.")  # Visible to team
         logging.error("Wrong flag data received [%r != %r].", response, flag)
         return ExitCode.CORRUPT
 
