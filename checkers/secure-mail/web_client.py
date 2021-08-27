@@ -26,6 +26,8 @@ class WebClient:
             verdict(DOWN, 'Web connection error: timeout', "Web connection error: timeout")
         except (ConnectionRefusedError, OSError) as e:
             verdict(DOWN, 'Web connection error: connection refused', "Web connection error: %s" % str(e))
+        except websockets.exceptions.InvalidStatusCode as e:
+            verdict(DOWN, 'Web connection error', "Web connection error: %s" % str(e))
         return self
 
     async def __aexit__(self, *args):
