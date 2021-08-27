@@ -7,9 +7,12 @@ import asyncio
 import json
 import base64
 import binascii
+import time
+import requests
 from smtp_client import SmtpClient
 from web_client import WebClient
 from user_db import UserDb
+from link_generator import LinkGenerator
 from checker_helper import *
 
 SMTP_PORT = 2525
@@ -31,9 +34,17 @@ async def check(args):
     async with WebClient(host) as wc:
         await wc.create_user(user.name, user.password)
 
-    # TODO send random links
-    smtp_client.send_phishing_message(to=user.name, link='http://example.com')
-    # TODO check result
+    link, name = LinkGenerator().get_random_link()
+    print(link)
+    smtp_client.send_phishing_message(to=user.name, link=link)
+    time.sleep(3)
+
+    try:
+        r = requests.get(f"http://10.60.56.129/check?file={name}")
+        if not r.json()[0]:
+            verdict(MUMBLE, "File download error", "File download error")
+    except Exception as e:
+        trace(f"Request failed: {str(e)}")
 
     verdict(OK)
 
