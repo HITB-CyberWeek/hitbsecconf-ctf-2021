@@ -148,7 +148,7 @@ teams: |
   {name => 'CCUP', network => '10.60.106.0/24', host => '10.60.106.3', token => '106_763b9bdab0469e8fece59ce8b788a095', country => 'Taiwan', logo => '/data/logos/dummy.png'},
   {name => 'SouthFlagsington', network => '10.60.107.0/24', host => '10.60.107.3', token => '107_6b138cd9f8e86bf857b9e2880290987d', country => 'United Kingdom', logo => '/data/logos/107.png'},
   {name => 'Pesudo Sudo', network => '10.60.108.0/24', host => '10.60.108.3', token => '108_11d0ec9446651daa70a770b8a92280ee', country => 'United States', logo => '/data/logos/dummy.png'},
-  {name => 'Team 109', network => '10.60.109.0/24', host => '10.60.109.3', token => '109_e705f0e2316a5eed386a3e3a907b60f2', country => 'NA', logo => '/data/logos/dummy.png'},
+  {name => '抒情诗、', network => '10.60.109.0/24', host => '10.60.109.3', token => '109_e705f0e2316a5eed386a3e3a907b60f2', country => 'CN', logo => '/data/logos/dummy.png'},
   {name => 'Team 110', network => '10.60.110.0/24', host => '10.60.110.3', token => '110_c58ad0cae3e49117e5f0b6c65bc4773d', country => 'NA', logo => '/data/logos/dummy.png'},
   {name => 'Team 111', network => '10.60.111.0/24', host => '10.60.111.3', token => '111_43ce4f93c0473741a2acdadcd5ffa5ba', country => 'NA', logo => '/data/logos/dummy.png'},
   {name => 'Team 112', network => '10.60.112.0/24', host => '10.60.112.3', token => '112_bd5e867a53a17d927a7452f42abc0783', country => 'NA', logo => '/data/logos/dummy.png'},
