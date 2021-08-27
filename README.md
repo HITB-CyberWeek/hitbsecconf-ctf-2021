@@ -29,6 +29,8 @@ Final scoreboard:
 | xar            | Teilzeit-Schwenker   |
 | passman        | Unreal Security      |
 | svghost        | C4T BuT S4D          |
+| sandbox        | pwnthem0le           |
+| secure-mail    | HgbSec               |
 
 # Authors
 
