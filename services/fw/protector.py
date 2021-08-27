@@ -68,7 +68,6 @@ def retry_decorator(count: int):
     return decorator
 
 
-# @retry_decorator(count=3)
 def load_xdp_program():
     logging.info("Loading XDP program...")
     try:
@@ -140,6 +139,8 @@ def main():
             if not build_xdp_program():
                 respond(sock, address, "ERR_BUILD")
                 continue
+            # if not load_xdp_program(): # In case of emergency - break glass :)
+            #     unload_xdp_program()
             if not load_xdp_program():
                 respond(sock, address, "ERR_LOAD")
                 continue

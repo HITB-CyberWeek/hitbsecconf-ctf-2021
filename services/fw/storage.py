@@ -14,7 +14,7 @@ ITEMS_MAX_COUNT = 25
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG, format="[storage] %(asctime)s %(message)s")
+    logging.basicConfig(level=logging.DEBUG, format="[ storage ] %(asctime)s %(message)s")
 
     flags = DB(DATA_DIR, limit=ITEMS_MAX_COUNT)
 

@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import pathlib
 from collections import deque
 
 from Crypto.PublicKey import RSA
@@ -17,19 +18,28 @@ class DB:
         os.makedirs(dir_name, exist_ok=True)
         self._dir_name = dir_name
         self._data = dict()
-        self._load()
-        self._limit = limit
         self._queue = deque()
+        self._limit = limit
+        self._load()
 
     def _load(self):
         try:
             for file_name in os.listdir(self._dir_name):
                 full_name = os.path.join(self._dir_name, file_name)
+
                 if os.path.isfile(full_name) and os.path.getsize(full_name) <= MAX_DATA_SIZE:
                     with open(full_name) as f:
                         data = f.read()
                     self._data[file_name] = data
+
             logging.info("Loaded %d items from %r", len(self._data), self._dir_name)
+
+            def get_mtime(x):
+                return pathlib.Path(os.path.join(self._dir_name, x)).stat().st_mtime
+            for key in sorted(self._data.keys(), key=get_mtime):
+                self._queue.append(key)
+                logging.debug("Item: %s", key)
+
         except Exception:
             logging.exception("Error loading data from %r", self._dir_name)
 
