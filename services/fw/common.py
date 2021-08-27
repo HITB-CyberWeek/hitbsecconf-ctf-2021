@@ -43,10 +43,11 @@ class DB:
             self._queue.append(key)
         self._data[key] = value
 
-        if self._limit is not None and self.count() > self._limit:
-            key_to_remove = self._queue.popleft()
-            logging.debug("Removing oldest key from DB: %r", key_to_remove)
-            self.remove(key_to_remove)
+        if self._limit is not None:
+            while self.count() > self._limit:
+                key_to_remove = self._queue.popleft()
+                logging.debug("Removing oldest key from DB: %r", key_to_remove)
+                self.remove(key_to_remove)
 
     def get(self, key: str, default=None):
         return self._data.get(key, default)
