@@ -2,6 +2,7 @@
 import logging
 import socket
 import subprocess
+import time
 
 from common import DB, check_signature
 
@@ -10,6 +11,7 @@ PORT = 17778
 XDP_TEMPLATE_FILE = "xdp_filter.template.c"
 XDP_RESULT_FILE = "xdp_filter.c"
 XDP_REPLACEMENT = "$RULES$"
+RULES_MAX_COUNT = 25
 
 
 def generate_xdp_program(rules: DB):
@@ -47,6 +49,27 @@ def build_xdp_program():
     return True
 
 
+def retry_decorator(count: int):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            i = 1
+            sleep_time = 0.5
+            while True:
+                logging.debug("Try %d of %d", i, count)
+                if func(*args, **kwargs):
+                    return True
+                i += 1
+                if i > count:
+                    logging.warning("Call has failed. No more retries left.")
+                    return False
+                logging.warning("Call has failed. Retrying in %.1f sec..", sleep_time)
+                time.sleep(sleep_time)
+                sleep_time *= 2
+        return wrapper
+    return decorator
+
+
+@retry_decorator(count=5)
 def load_xdp_program():
     logging.info("Loading XDP program...")
     try:
@@ -67,7 +90,7 @@ def respond(sock, address, message):
 def main():
     logging.basicConfig(level=logging.DEBUG, format="[protector] %(asctime)s %(message)s")
 
-    rules = DB(DATA_DIR)
+    rules = DB(DATA_DIR, limit=RULES_MAX_COUNT)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("", PORT))

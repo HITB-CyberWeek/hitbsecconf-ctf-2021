@@ -1,6 +1,8 @@
 import datetime
 import logging
 import os
+from collections import deque
+
 from Crypto.PublicKey import RSA
 
 MAX_DATA_SIZE = 64
@@ -11,11 +13,13 @@ pubkey = RSA.construct((n, e), )
 
 
 class DB:
-    def __init__(self, dir_name: str):
+    def __init__(self, dir_name: str, limit=None):
         os.makedirs(dir_name, exist_ok=True)
         self._dir_name = dir_name
         self._data = dict()
         self._load()
+        self._limit = limit
+        self._queue = deque()
 
     def _load(self):
         try:
@@ -29,16 +33,36 @@ class DB:
         except Exception:
             logging.exception("Error loading data from %r", self._dir_name)
 
+    def _filename(self, key: str):
+        return os.path.join(self._dir_name, key)
+
     def put(self, key: str, value: str):
-        with open(os.path.join(self._dir_name, key), "w") as f:
+        with open(self._filename(key), "w") as f:
             f.write(value)
+        if key not in self._data and self._limit is not None:
+            self._queue.append(key)
         self._data[key] = value
+
+        if self._limit is not None and self.count() > self._limit:
+            key_to_remove = self._queue.popleft()
+            logging.debug("Removing oldest key from DB: %r", key_to_remove)
+            self.remove(key_to_remove)
 
     def get(self, key: str, default=None):
         return self._data.get(key, default)
 
     def keys(self):
         return self._data.keys()
+
+    def remove(self, key: str):
+        try:
+            os.unlink(self._filename(key))
+        except FileNotFoundError:
+            pass
+        del self._data[key]
+
+    def count(self):
+        return len(self._data)
 
 
 def check_signature(flag_id: str, signature: str):

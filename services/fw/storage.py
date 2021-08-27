@@ -10,12 +10,13 @@ from common import DB, check_signature
 DATA_DIR = "/data/storage/"
 PORT = 17777
 MAX_SIZE = 64
+ITEMS_MAX_COUNT = 25
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="[storage] %(asctime)s %(message)s")
+    logging.basicConfig(level=logging.DEBUG, format="[storage] %(asctime)s %(message)s")
 
-    flags = DB(DATA_DIR)
+    flags = DB(DATA_DIR, limit=ITEMS_MAX_COUNT)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("", PORT))
