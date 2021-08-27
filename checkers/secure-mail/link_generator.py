@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import requests
 from random import randint
 
 IPS_URI = 'http://178.128.55.51/ips/'
@@ -11,6 +12,9 @@ class LinkGenerator:
         with open("clean.names") as f:
             lines = f.readlines()
 
+        uris = requests.get(IPS_URI).json()
+        ip = uris[randint(0, len(uris) - 1)]
+
         rnd = randint(0, len(lines) - 1)
         name = lines[rnd].rstrip()
-        return (f"http://10.60.56.129/{name}", name)
+        return (f"http://{ip}/{name}", name)

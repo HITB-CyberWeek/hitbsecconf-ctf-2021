@@ -34,11 +34,11 @@ async def check(args):
     async with WebClient(host) as wc:
         await wc.create_user(user.name, user.password)
 
-    link, name = LinkGenerator().get_random_link()
-    smtp_client.send_phishing_message(to=user.name, link=link)
-    time.sleep(3)
-
     try:
+        link, name = LinkGenerator().get_random_link()
+        smtp_client.send_phishing_message(to=user.name, link=link)
+        time.sleep(3)
+
         r = requests.get(f"http://10.60.56.129/check?file={name}")
         if not r.json()[0]:
             verdict(MUMBLE, "File download error", "File download error")
