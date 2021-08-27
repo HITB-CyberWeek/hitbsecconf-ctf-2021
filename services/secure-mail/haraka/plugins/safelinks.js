@@ -60,7 +60,6 @@ exports.check_link = function (uri) {
 
     return new Promise((resolve, reject) => {
         const curl = new Curl();
-        curl.enable(CurlFeature.Raw);
         curl.setOpt('URL', uri);
         curl.setOpt('FOLLOWLOCATION', true);
 
