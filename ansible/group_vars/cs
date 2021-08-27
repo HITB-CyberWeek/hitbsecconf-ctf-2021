@@ -146,7 +146,7 @@ teams: |
   {name => 'HN6', network => '10.60.104.0/24', host => '10.60.104.3', token => '104_6147f555af4c3d26841e925300bf5f48', country => 'Vietnam', logo => '/data/logos/dummy.png'},
   {name => 'r4!nb0w5', network => '10.60.105.0/24', host => '10.60.105.3', token => '105_3f203dd7d802224d4370e2251f85d51a', country => 'Australia', logo => '/data/logos/dummy.png'},
   {name => 'CCUP', network => '10.60.106.0/24', host => '10.60.106.3', token => '106_763b9bdab0469e8fece59ce8b788a095', country => 'Taiwan', logo => '/data/logos/dummy.png'},
-  {name => 'Team 107', network => '10.60.107.0/24', host => '10.60.107.3', token => '107_6b138cd9f8e86bf857b9e2880290987d', country => 'NA', logo => '/data/logos/dummy.png'},
+  {name => 'SouthFlagsington', network => '10.60.107.0/24', host => '10.60.107.3', token => '107_6b138cd9f8e86bf857b9e2880290987d', country => 'United Kingdom', logo => '/data/logos/107.png'},
   {name => 'Team 108', network => '10.60.108.0/24', host => '10.60.108.3', token => '108_11d0ec9446651daa70a770b8a92280ee', country => 'NA', logo => '/data/logos/dummy.png'},
   {name => 'Team 109', network => '10.60.109.0/24', host => '10.60.109.3', token => '109_e705f0e2316a5eed386a3e3a907b60f2', country => 'NA', logo => '/data/logos/dummy.png'},
   {name => 'Team 110', network => '10.60.110.0/24', host => '10.60.110.3', token => '110_c58ad0cae3e49117e5f0b6c65bc4773d', country => 'NA', logo => '/data/logos/dummy.png'},
