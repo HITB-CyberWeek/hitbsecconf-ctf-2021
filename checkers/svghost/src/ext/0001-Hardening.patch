@@ -1,0 +1,403 @@
+From 5ddd25eba894d59483f3aa2352d27635ad049c85 Mon Sep 17 00:00:00 2001
+From: Dmitriy Titarenko aka dscheg
+Date: Sat, 28 Aug 2021 19:40:07 +0500
+Subject: [PATCH] Hardening
+
+---
+ src/core/iTextSharp/text/Image.cs                      |  5 +++--
+ src/core/iTextSharp/text/ImgWMF.cs                     | 10 ++++++----
+ src/core/iTextSharp/text/Jpeg.cs                       |  5 +++--
+ src/core/iTextSharp/text/Jpeg2000.cs                   |  5 +++--
+ src/core/iTextSharp/text/pdf/OcspClientBouncyCastle.cs |  5 +++--
+ src/core/iTextSharp/text/pdf/PdfFileSpecification.cs   |  5 +++--
+ src/core/iTextSharp/text/pdf/PdfImage.cs               |  5 +++--
+ .../iTextSharp/text/pdf/RandomAccessFileOrArray.cs     | 10 ++++++----
+ src/core/iTextSharp/text/pdf/TSAClientBouncyCastle.cs  |  5 +++--
+ src/core/iTextSharp/text/pdf/XfaForm.cs                |  4 ++--
+ src/core/iTextSharp/text/pdf/codec/BmpImage.cs         |  5 +++--
+ src/core/iTextSharp/text/pdf/codec/GifImage.cs         |  5 +++--
+ src/core/iTextSharp/text/pdf/codec/PngImage.cs         |  5 +++--
+ src/core/iTextSharp/text/pdf/codec/wmf/MetaDo.cs       |  5 +++--
+ src/core/iTextSharp/text/rtf/graphic/RtfImage.cs       |  6 +++---
+ src/core/iTextSharp/text/xml/ParserBase.cs             |  9 +++++----
+ src/core/iTextSharp/text/xml/xmp/XmpReader.cs          |  4 ++--
+ 17 files changed, 57 insertions(+), 41 deletions(-)
+
+diff --git a/src/core/iTextSharp/text/Image.cs b/src/core/iTextSharp/text/Image.cs
+index dc5e80e..96e12e5 100644
+--- a/src/core/iTextSharp/text/Image.cs
++++ b/src/core/iTextSharp/text/Image.cs
+@@ -345,7 +345,8 @@ namespace iTextSharp.text {
+         /// <param name="url">an URL</param>
+         /// <returns>an object of type Gif, Jpeg or Png</returns>
+         public static Image GetInstance(Uri url) {
+-            Stream istr = null;
++            throw new NotImplementedException("Feature removed by security reason");
++            /*Stream istr = null;
+             try {
+                 WebRequest w = WebRequest.Create(url);
+                 istr = w.GetResponse().GetResponseStream();
+@@ -429,7 +430,7 @@ namespace iTextSharp.text {
+                 if (istr != null) {
+                     istr.Close();
+                 }
+-            }
++            }*/
+         }
+ 
+         public static Image GetInstance(Stream s) {
+diff --git a/src/core/iTextSharp/text/ImgWMF.cs b/src/core/iTextSharp/text/ImgWMF.cs
+index b504e28..f986960 100644
+--- a/src/core/iTextSharp/text/ImgWMF.cs
++++ b/src/core/iTextSharp/text/ImgWMF.cs
+@@ -112,9 +112,10 @@ namespace iTextSharp.text {
+             try {
+                 string errorID;
+                 if (rawData == null){
+-                    WebRequest w = WebRequest.Create(url);
++                    throw new NotImplementedException("Feature removed by security reason");
++                    /*WebRequest w = WebRequest.Create(url);
+                     istr = w.GetResponse().GetResponseStream();
+-                    errorID = url.ToString();
++                    errorID = url.ToString();*/
+                 }
+                 else{
+                     istr = new MemoryStream(rawData);
+@@ -157,8 +158,9 @@ namespace iTextSharp.text {
+             Stream istr = null;
+             try {
+                 if (rawData == null){
+-                    WebRequest w = WebRequest.Create(url);
+-                    istr = w.GetResponse().GetResponseStream();
++                    throw new NotImplementedException("Feature removed by security reason");
++                    /*WebRequest w = WebRequest.Create(url);
++                    istr = w.GetResponse().GetResponseStream();*/
+                 }
+                 else{
+                     istr = new MemoryStream(rawData);
+diff --git a/src/core/iTextSharp/text/Jpeg.cs b/src/core/iTextSharp/text/Jpeg.cs
+index c75c450..889b6ee 100644
+--- a/src/core/iTextSharp/text/Jpeg.cs
++++ b/src/core/iTextSharp/text/Jpeg.cs
+@@ -192,9 +192,10 @@ namespace iTextSharp.text {
+             try {
+                 string errorID;
+                 if (rawData == null){
+-                    WebRequest w = WebRequest.Create(url);
++                    throw new NotImplementedException("Feature removed by security reason");
++                    /*WebRequest w = WebRequest.Create(url);
+                     istr = w.GetResponse().GetResponseStream();
+-                    errorID = url.ToString();
++                    errorID = url.ToString();*/
+                 }
+                 else{
+                     istr = new MemoryStream(rawData);
+diff --git a/src/core/iTextSharp/text/Jpeg2000.cs b/src/core/iTextSharp/text/Jpeg2000.cs
+index 01397a3..b31fb2c 100644
+--- a/src/core/iTextSharp/text/Jpeg2000.cs
++++ b/src/core/iTextSharp/text/Jpeg2000.cs
+@@ -165,9 +165,10 @@ namespace iTextSharp.text {
+             try {
+                 string errorID;
+                 if (rawData == null){
+-                    WebRequest w = WebRequest.Create(url);
++                    throw new NotImplementedException("Feature removed by security reason");
++                    /*WebRequest w = WebRequest.Create(url);
+                     inp = w.GetResponse().GetResponseStream();
+-                    errorID = url.ToString();
++                    errorID = url.ToString();*/
+                 }
+                 else{
+                     inp = new MemoryStream(rawData);
+diff --git a/src/core/iTextSharp/text/pdf/OcspClientBouncyCastle.cs b/src/core/iTextSharp/text/pdf/OcspClientBouncyCastle.cs
+index 24b43e0..814babf 100644
+--- a/src/core/iTextSharp/text/pdf/OcspClientBouncyCastle.cs
++++ b/src/core/iTextSharp/text/pdf/OcspClientBouncyCastle.cs
+@@ -118,7 +118,8 @@ namespace iTextSharp.text.pdf {
+         * @see com.lowagie.text.pdf.OcspClient#getEncoded()
+         */
+         public byte[] GetEncoded() {
+-            OcspReq request = GenerateOCSPRequest(rootCert, checkCert.SerialNumber);
++            throw new NotImplementedException("Feature removed by security reason");
++            /*OcspReq request = GenerateOCSPRequest(rootCert, checkCert.SerialNumber);
+             byte[] array = request.GetEncoded();
+             HttpWebRequest con = (HttpWebRequest)WebRequest.Create(url);
+             con.ContentLength = array.Length;
+@@ -155,7 +156,7 @@ namespace iTextSharp.text.pdf {
+                     }
+                 }
+             }
+-            return null;
++            return null;*/
+         }
+     }
+ }
+\ No newline at end of file
+diff --git a/src/core/iTextSharp/text/pdf/PdfFileSpecification.cs b/src/core/iTextSharp/text/pdf/PdfFileSpecification.cs
+index 63244c5..d8b015c 100644
+--- a/src/core/iTextSharp/text/pdf/PdfFileSpecification.cs
++++ b/src/core/iTextSharp/text/pdf/PdfFileSpecification.cs
+@@ -177,8 +177,9 @@ namespace iTextSharp.text.pdf {
+                     }
+                     else {
+                         if (filePath.StartsWith("file:/") || filePath.StartsWith("http://") || filePath.StartsWith("https://")) {
+-                            WebRequest w = WebRequest.Create(filePath);
+-                            inp = w.GetResponse().GetResponseStream();
++                            throw new NotImplementedException("Feature removed by security reason");
++                            /*WebRequest w = WebRequest.Create(filePath);
++                            inp = w.GetResponse().GetResponseStream();*/
+                         }
+                         else {
+                             inp = BaseFont.GetResourceStream(filePath);
+diff --git a/src/core/iTextSharp/text/pdf/PdfImage.cs b/src/core/iTextSharp/text/pdf/PdfImage.cs
+index 3b84592..2b41571 100644
+--- a/src/core/iTextSharp/text/pdf/PdfImage.cs
++++ b/src/core/iTextSharp/text/pdf/PdfImage.cs
+@@ -170,8 +170,9 @@ namespace iTextSharp.text.pdf {
+                 // GIF, JPEG or PNG
+                 String errorID;
+                 if (image.RawData == null){
+-                    isp = WebRequest.Create(image.Url).GetResponse().GetResponseStream();
+-                    errorID = image.Url.ToString();
++                    throw new NotImplementedException("Feature removed by security reason");
++                    /*isp = WebRequest.Create(image.Url).GetResponse().GetResponseStream();
++                    errorID = image.Url.ToString();*/
+                 }
+                 else{
+                     isp = new MemoryStream(image.RawData);
+diff --git a/src/core/iTextSharp/text/pdf/RandomAccessFileOrArray.cs b/src/core/iTextSharp/text/pdf/RandomAccessFileOrArray.cs
+index 7849408..0ccc5fc 100644
+--- a/src/core/iTextSharp/text/pdf/RandomAccessFileOrArray.cs
++++ b/src/core/iTextSharp/text/pdf/RandomAccessFileOrArray.cs
+@@ -76,14 +76,15 @@ namespace iTextSharp.text.pdf {
+         public RandomAccessFileOrArray(String filename, bool forceRead) {
+             if (!File.Exists(filename)) {
+                 if (filename.StartsWith("file:/") || filename.StartsWith("http://") || filename.StartsWith("https://")) {
+-                    Stream isp = WebRequest.Create(new Uri(filename)).GetResponse().GetResponseStream();
++                    throw new NotImplementedException("Feature removed by security reason");
++                    /*Stream isp = WebRequest.Create(new Uri(filename)).GetResponse().GetResponseStream();
+                     try {
+                         this.arrayIn = InputStreamToArray(isp);
+                         return;
+                     }
+                     finally {
+                         try {isp.Close();}catch{}
+-                    }
++                    }*/
+                 }
+                 else {
+                     Stream isp = BaseFont.GetResourceStream(filename);
+@@ -114,13 +115,14 @@ namespace iTextSharp.text.pdf {
+         }
+ 
+         public RandomAccessFileOrArray(Uri url) {
+-            Stream isp = WebRequest.Create(url).GetResponse().GetResponseStream();
++            throw new NotImplementedException("Feature removed by security reason");
++            /*Stream isp = WebRequest.Create(url).GetResponse().GetResponseStream();
+             try {
+                 this.arrayIn = InputStreamToArray(isp);
+             }
+             finally {
+                 try {isp.Close();}catch{}
+-            }
++            }*/
+         }
+ 
+         public RandomAccessFileOrArray(Stream isp) {
+diff --git a/src/core/iTextSharp/text/pdf/TSAClientBouncyCastle.cs b/src/core/iTextSharp/text/pdf/TSAClientBouncyCastle.cs
+index bb5f3f4..65e0e11 100644
+--- a/src/core/iTextSharp/text/pdf/TSAClientBouncyCastle.cs
++++ b/src/core/iTextSharp/text/pdf/TSAClientBouncyCastle.cs
+@@ -184,7 +184,8 @@ namespace iTextSharp.text.pdf {
+         * @return - byte[] - TSA response, raw bytes (RFC 3161 encoded)
+         */
+         protected internal virtual byte[] GetTSAResponse(byte[] requestBytes) {
+-            HttpWebRequest con = (HttpWebRequest)WebRequest.Create(tsaURL);
++            throw new NotImplementedException("Feature removed by security reason");
++            /*HttpWebRequest con = (HttpWebRequest)WebRequest.Create(tsaURL);
+             con.ContentLength = requestBytes.Length;
+             con.ContentType = "application/timestamp-query";
+             con.Method = "POST";
+@@ -215,7 +216,7 @@ namespace iTextSharp.text.pdf {
+             if (encoding != null && Util.EqualsIgnoreCase(encoding, "base64")) {
+                 respBytes = Convert.FromBase64String(Encoding.ASCII.GetString(respBytes));
+             }
+-            return respBytes;
++            return respBytes;*/
+         }    
+     }
+ }
+\ No newline at end of file
+diff --git a/src/core/iTextSharp/text/pdf/XfaForm.cs b/src/core/iTextSharp/text/pdf/XfaForm.cs
+index 6005308..26615f6 100644
+--- a/src/core/iTextSharp/text/pdf/XfaForm.cs
++++ b/src/core/iTextSharp/text/pdf/XfaForm.cs
+@@ -124,8 +124,8 @@ namespace iTextSharp.text.pdf {
+                 bout.Write(b, 0, b.Length);
+             }
+             bout.Seek(0, SeekOrigin.Begin);
+-            XmlTextReader xtr = new XmlTextReader(bout);
+-            domDocument = new XmlDocument();
++            XmlTextReader xtr = new XmlTextReader(bout) {DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null};
++            domDocument = new XmlDocument() {XmlResolver = null};
+             domDocument.PreserveWhitespace = true;
+             domDocument.Load(xtr);
+             ExtractNodes();
+diff --git a/src/core/iTextSharp/text/pdf/codec/BmpImage.cs b/src/core/iTextSharp/text/pdf/codec/BmpImage.cs
+index 41d9fef..fb18361 100644
+--- a/src/core/iTextSharp/text/pdf/codec/BmpImage.cs
++++ b/src/core/iTextSharp/text/pdf/codec/BmpImage.cs
+@@ -164,7 +164,8 @@ namespace iTextSharp.text.pdf.codec {
+         * @return the image
+         */    
+         public static Image GetImage(Uri url) {
+-            Stream isp = null;
++            throw new NotImplementedException("Feature removed by security reason");
++            /*Stream isp = null;
+             try {
+                 isp = WebRequest.Create(url).GetResponse().GetResponseStream();
+                 Image img = GetImage(isp);
+@@ -175,7 +176,7 @@ namespace iTextSharp.text.pdf.codec {
+                 if (isp != null) {
+                     isp.Close();
+                 }
+-            }
++            }*/
+         }
+         
+         /** Reads a BMP from a stream. The stream is not closed.
+diff --git a/src/core/iTextSharp/text/pdf/codec/GifImage.cs b/src/core/iTextSharp/text/pdf/codec/GifImage.cs
+index a6e64d2..59a5e13 100644
+--- a/src/core/iTextSharp/text/pdf/codec/GifImage.cs
++++ b/src/core/iTextSharp/text/pdf/codec/GifImage.cs
+@@ -108,7 +108,8 @@ namespace iTextSharp.text.pdf.codec {
+         * @throws IOException on error
+         */    
+         public GifImage(Uri url) {
+-            fromUrl = url;
++            throw new NotImplementedException("Feature removed by security reason");
++            /*fromUrl = url;
+             Stream isp = null;
+             try {
+                 isp = WebRequest.Create(url).GetResponse().GetResponseStream();
+@@ -118,7 +119,7 @@ namespace iTextSharp.text.pdf.codec {
+                 if (isp != null) {
+                     isp.Close();
+                 }
+-            }
++            }*/
+         }
+         
+         /** Reads gif images from a file.
+diff --git a/src/core/iTextSharp/text/pdf/codec/PngImage.cs b/src/core/iTextSharp/text/pdf/codec/PngImage.cs
+index 410e749..7d45af2 100644
+--- a/src/core/iTextSharp/text/pdf/codec/PngImage.cs
++++ b/src/core/iTextSharp/text/pdf/codec/PngImage.cs
+@@ -189,7 +189,8 @@ namespace iTextSharp.text.pdf.codec {
+         * @return the image
+         */    
+         public static Image GetImage(Uri url) {
+-            Stream isp = null;
++            throw new NotImplementedException("Feature removed by security reason");
++            /*Stream isp = null;
+             try {
+                 isp = WebRequest.Create(url).GetResponse().GetResponseStream();
+                 Image img = GetImage(isp);
+@@ -200,7 +201,7 @@ namespace iTextSharp.text.pdf.codec {
+                 if (isp != null) {
+                     isp.Close();
+                 }
+-            }
++            }*/
+         }
+         
+         /** Reads a PNG from a stream.
+diff --git a/src/core/iTextSharp/text/pdf/codec/wmf/MetaDo.cs b/src/core/iTextSharp/text/pdf/codec/wmf/MetaDo.cs
+index f42662d..d5d5207 100644
+--- a/src/core/iTextSharp/text/pdf/codec/wmf/MetaDo.cs
++++ b/src/core/iTextSharp/text/pdf/codec/wmf/MetaDo.cs
+@@ -681,13 +681,14 @@ namespace iTextSharp.text.pdf.codec.wmf
+         Stream imgIn;
+         byte[] data = null;
+         if (image.OriginalData == null) {
+-            imgIn = WebRequest.Create(image.Url).GetResponse().GetResponseStream();
++            throw new NotImplementedException("Feature removed by security reason");
++            /*imgIn = WebRequest.Create(image.Url).GetResponse().GetResponseStream();
+             MemoryStream outp = new MemoryStream();
+             int b = 0;
+             while ((b = imgIn.ReadByte()) != -1)
+                 outp.WriteByte((byte)b);
+             imgIn.Close();
+-            data = outp.ToArray();
++            data = outp.ToArray();*/
+         }
+         else
+             data = image.OriginalData;
+diff --git a/src/core/iTextSharp/text/rtf/graphic/RtfImage.cs b/src/core/iTextSharp/text/rtf/graphic/RtfImage.cs
+index 03b8280..999bfbc 100644
+--- a/src/core/iTextSharp/text/rtf/graphic/RtfImage.cs
++++ b/src/core/iTextSharp/text/rtf/graphic/RtfImage.cs
+@@ -194,15 +194,15 @@ namespace iTextSharp.text.rtf.graphic {
+                 } else {                
+                     byte[] iod = image.OriginalData;
+                     if (iod == null) {
+-                        Stream imageIn = WebRequest.Create(image.Url).GetResponse().GetResponseStream();
++                        /*Stream imageIn = WebRequest.Create(image.Url).GetResponse().GetResponseStream();
+                         if (imageType == Image.ORIGINAL_WMF) { //remove the placeable header first
+                             for (int k = 0; k < WMF_PLACEABLE_HEADER_SIZE; k++) {
+                                 if (imageIn.ReadByte() < 0) throw (new IOException("while removing wmf placeable header"));
+                             }
+                         }
+                         bab.Write(imageIn);
+-                        imageIn.Close();
+-                        
++                        imageIn.Close();*/
++                        throw new NotImplementedException("Feature removed by security reason");
+                     } else {
+                         
+                         if (imageType == Image.ORIGINAL_WMF) {
+diff --git a/src/core/iTextSharp/text/xml/ParserBase.cs b/src/core/iTextSharp/text/xml/ParserBase.cs
+index 32b48c2..49c1fa6 100644
+--- a/src/core/iTextSharp/text/xml/ParserBase.cs
++++ b/src/core/iTextSharp/text/xml/ParserBase.cs
+@@ -13,7 +13,7 @@ namespace iTextSharp.text.xml
+         public void Parse(XmlDocument xDoc) {
+             string xml = xDoc.OuterXml;
+             StringReader stringReader = new StringReader(xml);
+-            XmlTextReader reader = new XmlTextReader(stringReader);
++            XmlTextReader reader = new XmlTextReader(stringReader) {DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null};
+             this.Parse(reader);
+         }
+ 
+@@ -66,9 +66,10 @@ namespace iTextSharp.text.xml
+         /// </summary>
+         /// <param name="url">the XML document to parse</param>
+         public void Parse(string url) {
+-            XmlTextReader reader = null;
+-            reader = new XmlTextReader(url);
+-            this.Parse(reader);
++            throw new NotImplementedException("Feature removed by security reason");
++            /*XmlTextReader reader = null;
++            reader = new XmlTextReader(Stream.Null) {DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null};
++            this.Parse(reader);*/
+         }
+ 
+         /// <summary>
+diff --git a/src/core/iTextSharp/text/xml/xmp/XmpReader.cs b/src/core/iTextSharp/text/xml/xmp/XmpReader.cs
+index d2a30b0..5b774f1 100644
+--- a/src/core/iTextSharp/text/xml/xmp/XmpReader.cs
++++ b/src/core/iTextSharp/text/xml/xmp/XmpReader.cs
+@@ -72,8 +72,8 @@ namespace iTextSharp.text.xml.xmp {
+             MemoryStream bout = new MemoryStream();
+             bout.Write(bytes, 0, bytes.Length);
+             bout.Seek(0, SeekOrigin.Begin);
+-            XmlTextReader xtr = new XmlTextReader(bout);
+-            domDocument = new XmlDocument();
++            XmlTextReader xtr = new XmlTextReader(bout) {DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null};
++            domDocument = new XmlDocument() {XmlResolver = null};
+             domDocument.PreserveWhitespace = true;
+             domDocument.Load(xtr);
+ 	    }
+-- 
+2.31.1.windows.1
+
