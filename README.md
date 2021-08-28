@@ -25,7 +25,7 @@ Final scoreboard:
 
 | **SERVICE**    | **TEAM**             |
 | -------------- | -------------------- |
-| fw             | Teilzeit-Schwenker   |
+| fw             | TRX                  |
 | xar            | Teilzeit-Schwenker   |
 | passman        | Unreal Security      |
 | svghost        | C4T BuT S4D          |
