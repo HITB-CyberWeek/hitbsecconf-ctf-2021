@@ -45,6 +45,6 @@ and post this XML to **svghᗣst** service:
 ```
 The XML declaration is skipped by sanitizer. The second SVG UTF-7 encoded root is considered by sanitizer as simple `#text` and is rendered by `librsvg`.
 
-To exploit you need to list all private files, compose SVG with UTF-7 encoded includes, taking into account that **overflowed text isn't rendered** (play with `font-size`, `textLength`, `transform="scale()"`, etc), post it, render it as PDF, and then parse PDF as text.
+To exploit you need to list all private files, compose SVG with UTF-7 encoded includes (also notice, that **multiple** private files can be included in a **one** hacker's private file), taking into account that **overflowed text isn't rendered** (play with `font-size`, `textLength`, `transform="scale()"`, etc), post it, render it as PDF, and then parse PDF as text.
 
 See full exploit here: https://github.com/HITB-CyberWeek/hitbsecconf-ctf-2021/blob/main/sploits/svghost/sploit.sh
